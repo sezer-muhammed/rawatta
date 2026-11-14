@@ -232,8 +232,8 @@ keeps its config string in the `grammar` field (format: [configs/GRAMMAR.md, "Co
 rawatta run --images photos --out out --config configs/my-setting.toml
 ```
 
-**Calibrating your own setting.** [calibration/](calibration/README.md) reproduces the paper's procedure (Sec. 4.4;
-with substitute RE10K/CO3Dv2 calibration frames, because the paper's subsets were lost): candidate configs run on five calibration datasets and are accepted only if the worst dataset stays within an
+**Calibrating your own setting.** [calibration/](calibration/README.md) reproduces the paper's procedure (Sec. 4.4,
+on the paper's calibration subsets in `eval/manifests/paper/calibration.json`): candidate configs run on five calibration datasets and are accepted only if the worst dataset stays within an
 accuracy budget against the exact engine. It writes the result as a config TOML.
 
 **Benchmark jobs.** `rawatta bench --job job.json` runs every config on every sequence of a job
@@ -299,8 +299,8 @@ Of this release:
 
 - **Linux x86_64 only**, NVIDIA GPUs only. RAWATTA and RAWATTA-Fast need sm_89+; the exact engine is built and
   bit-checked for sm_80+ but has not yet been run on Ampere hardware.
-- **Not every number can be re-derived from this repository.** The paper's RealEstate10K (38 sequences) and 7-Scenes
-  (10 sequences) evaluation subsets were not kept, so full-manifest runs differ on those two datasets; the ports of
+- **Not every number can be re-derived from this repository.** The paper's evaluation and calibration subsets and
+  per-seed frame maps are released (`eval/manifests/paper/`), but the ports of
   the rival methods onto VGGT-Ω are not included; `research/` is unsupported and was not re-run for this release.
   Details: [REPRODUCE.md](REPRODUCE.md).
 - **Not yet re-measured.** The numbers above are the paper's. End-to-end runs of this release with the weights are
