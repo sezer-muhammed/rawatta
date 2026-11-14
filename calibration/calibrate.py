@@ -40,13 +40,16 @@ always run on the bf16 kernel); a merged layer keeps it (merged layers run on th
 kernel, see configs/GRAMMAR.md). In the paper: 49 configurations (38
 single-layer, 11 greedy trials), result frame on 0, 4, 5 and merge4 on 3, 19 = RAWATTA-Fast.
 
-Calibration data (paper Sec. 4.4, "Data"; prepare with eval/data/, see eval/DATASETS.md):
+Calibration data (paper Sec. 4.4, "Data"; the paper's lists: eval/manifests/paper/calibration.json;
+prepare with eval/data/, see eval/DATASETS.md):
   outdoor  Mip-NeRF 360 bicycle, garden, stump, kitchen; 50 frames (COLMAP ground truth)
   object   CO3Dv2 banana + donut, 10 sequences x 10 frames
-  indoor   RealEstate10K calibration sequences x 10 frames (--re10k-cal; see the README)
+  indoor   RealEstate10K, the paper's 30 calibration sequences x 10 frames (--re10k-cal FILE for others)
   rgbd     7-Scenes train (first TrainSplit sequence per scene), 50 frames ($DATA/7scenes_train)
   dynamic  TUM fr3 *_validation takes, 50 frames ($DATA/tum_dynamic_train)
-A frame sample is one draw of frames per sequence (--seed; 0 = the search's own sample).
+A frame sample is one draw of frames per sequence (--seed; 0 = the search's own sample). CO3Dv2 and
+RE10K use the manifests' co3d_s<seed> / re10k_s<seed> maps restricted to their sequences, as the
+paper's runs did.
 Samples 1 and 2 of the 50-frame train splits use the <ds>_n50_s<seed> maps the data scripts
 write with --seeded50 (50 random frames; falls back to the 10-frame <ds>_s<seed> map).
 
@@ -115,18 +118,18 @@ def _map_file(maps: Path, ds: str, seed: int) -> dict:
 
 def domains(data: Path, seed: int, maps: Path | None = None, re10k_cal: list[str] | None = None,
             only: list[str] | None = None) -> list[Domain]:
-    sp = run_eval.splits()
+    pc = run_eval.paper_calibration()["domains"]
     maps = maps or data / "_frames"
     out = []
     want = only or ["outdoor", "object", "indoor", "rgbd", "dynamic"]
     if "outdoor" in want:
-        out.append(Domain("outdoor", "colmap", data / "mipnerf360", scenes=sp["mipnerf360"]["calibration"], frames=50))
+        out.append(Domain("outdoor", "colmap", data / "mipnerf360", scenes=pc["outdoor"]["sequences"], frames=50))
     if "object" in want:
-        cal = set(sp["co3d"]["calibration"])
+        cal = set(pc["object"]["sequences"])
         fm = run_eval.frame_map("co3d", seed, split="all")
         out.append(Domain("object", "omega", data / "co3d", fmap={k: v for k, v in fm.items() if k in cal}))
     if "indoor" in want:
-        cal = set(re10k_cal or sp["re10k"]["calibration"])
+        cal = set(re10k_cal or pc["indoor"]["sequences"])
         fm = run_eval.frame_map("re10k", seed, split="all")
         out.append(Domain("indoor", "omega", data / "re10k", fmap={k: v for k, v in fm.items() if k in cal}))
     if "rgbd" in want:
@@ -515,7 +518,8 @@ def main() -> int:
     p.add_argument("--budget3", type=float, default=None, help="override the ΔAUC@3 budget")
     p.add_argument("--budget30", type=float, default=None, help="override the ΔAUC@30 budget")
     p.add_argument("--max-restore", type=int, default=8)
-    p.add_argument("--re10k-cal", default=None, help="file with RE10K calibration sequence ids, one per line")
+    p.add_argument("--re10k-cal", default=None,
+                   help="file with RE10K calibration sequence ids, one per line (default: the paper's 30)")
     p.add_argument("--domains", default=None, help="subset of outdoor,object,indoor,rgbd,dynamic")
     p.add_argument("--chunk", type=int, default=6, help="configs per bench job")
     p.add_argument("--lock", default=None, help="flock this file around every bench job (GPU lock)")

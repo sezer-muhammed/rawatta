@@ -7,8 +7,9 @@
 Writes, from eval/manifests (calibration sequences excluded, as eval/run_eval.py does):
 eth3d.json (official frames), co3d_eval_s<seed>.json, re10k_eval_s<seed>.json,
 7scenes_s<seed>.json, nrgbd_s<seed>.json, tum_dynamic_s<seed>.json. The paper's harness
-runs used `re10k_eval_v2` (38 sequences), which was not kept; re10k_eval_s<seed> has the
-190 sequences outside the calibration list (see eval/DATASETS.md).
+runs used `re10k_eval_v2` (38 sequences); that subset and its seeded frames are in
+eval/manifests/paper/re10k.json. re10k_eval_s<seed> has the 190 sequences outside the
+old 10-sequence calibration list (see eval/DATASETS.md).
 """
 import argparse
 import json

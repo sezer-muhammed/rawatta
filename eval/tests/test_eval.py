@@ -116,7 +116,9 @@ def test_read_colmap_images_roundtrip(tmp_path):
 # run_eval: maps, splits, tables
 # --------------------------------------------------------------------------
 
-def test_paper_frame_maps():
+def test_full_frame_maps():
+    """--subsets full: every manifest sequence outside the earlier calibration lists (the paper's
+    subsets are tested in test_paper_subsets.py)."""
     counts = {ds: len(run_eval.frame_map(ds, 0)) for ds in run_eval.PAPER}
     assert counts == {"eth3d": 13, "co3d": 40, "re10k": 190, "7scenes": 18, "nrgbd": 9, "tum_dynamic": 8}
     co3d = run_eval.frame_map("co3d", 1)
@@ -241,7 +243,8 @@ def test_run_eval_pipeline_with_fake_bench(tmp_path):
     assert not list(out.rglob("depth.npy"))  # cleaned up after scoring
 
 
-@pytest.mark.parametrize("script", ["score.py", "run_eval.py", "omega_src.py", "official/time_official.py",
+@pytest.mark.parametrize("script", ["score.py", "run_eval.py", "omega_src.py", "paper_subsets.py",
+                                    "official/time_official.py",
                                     "data/co3d.py", "data/re10k.py", "data/sevenscenes.py", "data/sevenscenes_long.py",
                                     "data/nrgbd.py", "data/tum_dynamic.py", "data/eth3d.py", "data/sintel.py",
                                     "data/eth3d_fetch.py", "data/sintel_fetch.py", "data/shrink_depth.py",

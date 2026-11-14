@@ -6,7 +6,8 @@ These are the PyTorch harnesses the paper used for its generality experiments on
 They are kept **as used for the paper**: the algorithms, defaults and record formats are
 unchanged; only container names and host paths were replaced by options and environment
 variables, upstream imports were deferred so that `--help` works without them, and the
-calibration maps that were lost got a documented fallback. They are not part of the supported
+calibration maps these scripts read by file name get a documented fallback (the recovered lists are in
+`eval/manifests/paper/calibration.json`). They are not part of the supported
 tool set (that is `tools/`, `eval/`, `calibration/` and the `rawatta` binary). The only test
 (`research/tests/test_help.py`) checks that every script and subcommand prints its `--help`
 without the upstream packages; the harnesses were not re-run for this release.
@@ -69,9 +70,9 @@ Configs are `<schedule>@<bf16|sage>[+fp8]` with schedule `dense` or `L<i>:<frame
 (`merge4nx`: all frames merged, for π³), separated by `;` on the command line; `+fp8` is a simulated
 FP8 quantise-dequantise of the linear layers (accuracy only, never timed).
 
-Known differences from the paper's runs: the paper's RE10K evaluation used 38 sequences
-(`re10k_eval_v2`) and its 7-Scenes table 10 sequences, and the searches' CO3Dv2/RE10K calibration maps
-(`co3d_train.json`, `re10k_train.json`); none of these lists was kept (see
-`eval/DATASETS.md`). `v31gen_search.py` falls back to the banana/donut sequences of the CO3Dv2
+Known differences from the paper's runs: these scripts read the RE10K evaluation subset (`re10k_eval_v2`,
+38 sequences) and the searches' CO3Dv2/RE10K calibration maps (`co3d_train.json`, `re10k_train.json`) by file
+name. The same lists are released in `eval/manifests/paper/` (see `eval/manifests/README.md`) but in the
+supported tools' format, so export them to those file names before running these scripts. `v31gen_search.py` falls back to the banana/donut sequences of the CO3Dv2
 manifest and the 10 RE10K calibration sequences of `eval/manifests/splits.json` when the files are not
 in `--cal-maps`.

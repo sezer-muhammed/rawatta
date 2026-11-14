@@ -55,9 +55,13 @@ python3 eval/data/manifest.py verify $DATA/eth3d eval/manifests/eth3d.json
 python3 eval/data/manifest.py verify $DATA/co3d  eval/manifests/co3d.json --maps $DATA/_frames
 ```
 
-The frame maps per seed and the SHA-256 of every prepared file are in [eval/manifests/](eval/manifests). ETH3D, CO3Dv2
-(40 sequences of 8 categories), NRGBD (9 scenes) and TUM-dynamic (8 takes) match the paper's evaluation sets.
-RealEstate10K and 7-Scenes do not; see [Known gaps](#7-known-gaps).
+The frame maps per seed and the SHA-256 of every prepared file are in [eval/manifests/](eval/manifests). The paper's
+evaluation and calibration subsets, recovered from the authors' experiment records, are in
+[eval/manifests/paper/](eval/manifests/paper) with the frames of every sequence for seeds 0, 1 and 2: ETH3D (13 scenes,
+official frames), CO3Dv2 (40 sequences of 8 categories), RealEstate10K (38 sequences), 7-Scenes (all 18 test
+sequences), NRGBD (9 scenes), TUM-dynamic (8 takes), and the five calibration datasets (RealEstate10K: 30 sequences).
+`run_eval.py` and `calibrate.py` use them by default ([eval/README.md](eval/README.md#the-papers-subsets)). The paper's
+Supp. Tab. 12 says 10 7-Scenes test sequences; its runs used all 18 ([Known gaps](#7-known-gaps)).
 
 ## 4. Timing protocol and the GPU lock
 
@@ -105,9 +109,8 @@ minimum over the six datasets, mean ± std over seeds):
 
 Tolerance: the paper treats differences below about 0.5 AUC@3 as seed noise, and the ± above is the sample standard
 deviation over the three seeds. The engine is deterministic: re-runs on the same machine are bit-identical
-(Supp. reproducibility checklist). Another GPU, driver or cuBLASLt version can change results slightly. On the
-RE10K and 7-Scenes columns, and on any worst-dataset value they decide, expect differences from the paper because the
-manifests hold more sequences than the paper evaluated ([Known gaps](#7-known-gaps)).
+(Supp. reproducibility checklist). Another GPU, driver or cuBLASLt version can change results slightly.
+`run_eval.py` evaluates the paper's sequences and frames by default (`--subsets paper`).
 
 The "vs Off." column and the "cal." column of Tab. 1 come from Tab. 4 (below) and from the calibration check
 (Sec. 4.4, [section 6](#6-supplementary-material-calibration-and-the-rest)).
@@ -241,10 +244,10 @@ Tab. 25 and can be written the same way; the layers of row (d) are not given in 
 | Result | How | Expected (paper) | Reproducible here? |
 |---|---|---|---|
 | Configuration names (Supp. Tab. 6) | [configs/GRAMMAR.md](configs/GRAMMAR.md), "Other named configs" | – | yes: every name maps to a config string, except the configs listed under "Not available" there |
-| Seed-0 results per dataset (Supp. Tab. 10) | the Tab. 3 command | Supp. Tab. 10 | yes, with the RE10K / 7-Scenes caveat |
-| Depth and point maps at N = 10 (Supp. Tab. 22) | `run_eval.py` prints δ1.25 and AbsRel for ETH3D, 7-Scenes, NRGBD, TUM-dynamic; add `--points` for the point-map metrics | δ1.25, exact engine / RAWATTA: ETH3D 99.83 / 99.83 (AbsRel 0.0115 / 0.0116), 7-Scenes 94.61 / 94.60, NRGBD 99.67 / 99.67 | yes, with the 7-Scenes caveat |
+| Seed-0 results per dataset (Supp. Tab. 10) | the Tab. 3 command | Supp. Tab. 10 | yes |
+| Depth and point maps at N = 10 (Supp. Tab. 22) | `run_eval.py` prints δ1.25 and AbsRel for ETH3D, 7-Scenes, NRGBD, TUM-dynamic; add `--points` for the point-map metrics | δ1.25, exact engine / RAWATTA: ETH3D 99.83 / 99.83 (AbsRel 0.0115 / 0.0116), 7-Scenes 94.61 / 94.60, NRGBD 99.67 / 99.67 | yes |
 | Small N, 2 to 10 frames (Supp. Tab. 24) | the latency command with `--frames 2`, `4`, `10` | N = 2 / 4 / 10: Official 90.5 / 167.5 / 482.2 ms, exact engine 52.0 / 108.5 / 285.4 ms, RAWATTA 51.4 / 105.4 / 265.5 ms, RAWATTA-Fast 51.3 / 104.7 / 260.7 ms | yes |
-| Calibration check and searches (Sec. 4.4, Supp. Tab. 13) | [calibration/README.md](calibration/README.md): `calibrate.py precision`, `schedule`, `check --seeds 0,1,2` | precision search stops after blocks 15 and 4 (RAWATTA); schedule search: 49 configurations, frame on 0, 4, 5 and merge4 on 3, 19 (RAWATTA-Fast); check on three samples: RAWATTA 3/3, RAWATTA-Fast 2/3, threshold schedule 0/3 | partly: the paper's 30-sequence RE10K calibration subset is lost, so a search is not guaranteed to return the paper's settings |
+| Calibration check and searches (Sec. 4.4, Supp. Tab. 13) | [calibration/README.md](calibration/README.md): `calibrate.py precision`, `schedule`, `check --seeds 0,1,2` | precision search stops after blocks 15 and 4 (RAWATTA); schedule search: 49 configurations, frame on 0, 4, 5 and merge4 on 3, 19 (RAWATTA-Fast); check on three samples: RAWATTA 3/3, RAWATTA-Fast 2/3, threshold schedule 0/3 | yes: the default calibration data are the paper's (`eval/manifests/paper/calibration.json`); the paper's precision search measured 16-bit P·V with FP32 accumulation (`--high sage.pvh`) |
 | Accuracy at 50, 100 and 200 frames (Supp. Tab. 11) | – | RAWATTA within 0.32 and RAWATTA-Fast within 1.20 AUC@3 of the exact engine on the worst dataset | no: the seeded 100- and 200-frame maps of the five datasets are not in the manifests (`--map n50` gives one evenly spaced 50-frame map for 7-Scenes, NRGBD and TUM-dynamic only) |
 | ETH3D at 50 frames (Supp. Tab. 21) | – | RAWATTA-Fast −1.65 against the exact engine, −2.22 against Official | no: the manifests hold ETH3D's official 10-frame map only |
 | Memory on 7-Scenes-long (Supp. Tab. 17) | `eval/data/sevenscenes_long.py` prepares the sequences and the N-frame maps; run them with a `rawatta bench` job | exact engine at N = 200: 10.63 GiB peak, 32.8 AUC@3 | partly: no driver script; the chunked VGGT-Ω and rival rows are not included |
@@ -257,13 +260,9 @@ new runs ([site-src/README.md](site-src/README.md)).
 
 ## 7. Known gaps
 
-- **Evaluation subsets that were not kept.** The paper evaluated 38 RealEstate10K sequences and 10 7-Scenes test
-  sequences; neither list survived. `run_eval.py` evaluates all 18 7-Scenes test sequences and the 190 RealEstate10K
-  sequences outside the earlier protocol's 10-sequence calibration list; they may include sequences of the paper's
-  lost 30-sequence calibration subset, so RE10K results for the shipped settings are not guaranteed sequence-disjoint
-  from their calibration. These two columns, and any worst-dataset value they decide, are not expected to equal the
-  paper's. The paper's 30-sequence RealEstate10K calibration subset and its CO3Dv2 calibration
-  map are lost too ([eval/DATASETS.md](eval/DATASETS.md)).
+- **7-Scenes count in the paper.** The paper's Supp. Tab. 12 lists 10 7-Scenes test sequences. Its runs used all 18
+  (per-sequence records; every 7-Scenes AUC@3 of Supp. Tab. 10 fits 18 × 45 pairs, none fits 10 × 45), and so does
+  `run_eval.py` ([eval/manifests/paper/7scenes.json](eval/manifests/paper/7scenes.json)).
 - **Rival ports not included.** The ports of SparseVGGT†, GPA-VGGT† and FastVGGT† onto VGGT-Ω, chunked VGGT-Ω
   (Tab. 4, Supp. Tab. 17) and the top-k routing control are not part of this release. Their in-engine counterparts
   (`avggt-pub`, `avggt-pub-frame`, `gpa-fast`, `sage2`) are.

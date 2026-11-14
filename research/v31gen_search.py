@@ -20,7 +20,7 @@ so the caller can release the GPU lock and re-queue (research/run.sh search loop
 
 Research code, unsupported: kept as used for the paper (see research/README.md).
 The paper's CO3Dv2 and RE10K calibration maps (co3d_train.json / re10k_train.json)
-were not kept in the authors' research codebase; if they are not in --cal-maps, the
+are released as lists in eval/manifests/paper/calibration.json; if the two files are not in --cal-maps, the
 object domain uses the banana/donut sequences of the CO3Dv2 manifest (seed-0 map)
 and the indoor domain the 10 RE10K calibration sequences of eval/manifests/splits.json.
 """

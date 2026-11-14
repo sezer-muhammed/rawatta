@@ -28,7 +28,8 @@ renames (crates/ARCHITECTURE.md). End-to-end parity with the paper's runs is pen
 
 - Linux x86_64 and NVIDIA GPUs only. RAWATTA and RAWATTA-Fast need sm_89+; the exact engine is built and bit-checked
   for sm_80+ but not yet run on Ampere hardware.
-- The paper's RealEstate10K and 7-Scenes evaluation subsets were not kept, and the ports of the rival methods onto
-  VGGT-Ω are not included (`REPRODUCE.md`).
+- The ports of the rival methods onto VGGT-Ω are not included, and the 50/100/200-frame maps behind the long-sequence
+  table are not yet ported (`REPRODUCE.md`). The paper's evaluation and calibration subsets with per-seed frame maps
+  are in `eval/manifests/paper/`.
 
 [0.1.0]: https://github.com/sezer-muhammed/rawatta/releases/tag/v0.1.0

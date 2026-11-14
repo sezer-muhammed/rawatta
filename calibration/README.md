@@ -58,11 +58,15 @@ only implements the rule.
 
 ## Calibration data
 
+The paper's calibration data, recovered from the authors' experiment records
+(`eval/manifests/paper/calibration.json`, with the sequences and, for CO3Dv2 and RE10K, the frames
+of every sample):
+
 | domain | data | sequences × frames |
 |---|---|---|
 | outdoor | Mip-NeRF 360 bicycle, garden, stump, kitchen (COLMAP ground truth) | 4 × 50 |
 | object | CO3Dv2 banana and donut (the evaluation uses the 8 other categories) | 10 × 10 |
-| indoor | RealEstate10K sequences outside the evaluation split | see below × 10 |
+| indoor | RealEstate10K: the earlier protocol's 10 calibration sequences plus the first 20 sorted ids outside them and outside the 38 evaluation sequences | 30 × 10 |
 | rgbd | 7-Scenes train: first `TrainSplit` sequence of each scene | 7 × 50 |
 | dynamic | TUM fr3 `*_validation` takes (walking xyz/halfsphere/rpy, sitting xyz) | 4 × 50 |
 
@@ -72,24 +76,23 @@ draws 50 of all frames; CO3Dv2/RE10K use the `s1`/`s2` maps; the 7-Scenes and TU
 50 random frames with a finite pose (`<ds>_n50_s1`/`_s2`, the sampling of the paper's three-sample
 check), which the data scripts write and store when run with `--seeded50` (see
 `eval/DATASETS.md`). Data prepared without `--seeded50` falls back to the 10-frame `s1`/`s2` maps,
-with a warning.
+with a warning. These are the frames of the paper's runs: the CO3Dv2 and RE10K maps restricted to
+the calibration sequences, and the same sampling rules for the other three domains.
 
-Deviations from the paper that cannot be closed from the authors' research codebase: the paper's
-RE10K calibration used 30 sequences outside its 38-sequence evaluation subset, and neither list was
-kept (`eval/DATASETS.md`); the CO3Dv2 calibration frames of the paper (its `co3d_train` map) were not
-kept either, so the object domain uses the manifest's seeded maps of the 10 banana/donut sequences. By default the indoor domain uses the 10 RE10K sequences of the earlier
-calibration protocol (`eval/manifests/splits.json`); pass your own list with `--re10k-cal FILE`.
-Searches run with these defaults are therefore not guaranteed to return exactly the paper's
-settings.
+`calibrate.py` uses these lists by default; pass your own RE10K list with `--re10k-cal FILE`.
+Two settings of the paper's searches are not the defaults here: the precision search measured
+16-bit P·V with FP32 accumulation (paper supplement, "Search details"; pass `--high sage.pvh`),
+while `calibrate.py` defaults to the deployed `sage.pvh16`; and the paper's first three-sample run
+reused the seed-0 outdoor frames for samples 1 and 2 (Supp. Tab. 13), while `check` always uses
+the frames of the sample, as the paper's re-check does.
 
 ## Cost
 
 Counts, from the procedure. Brackets give what the paper states, or a count derived from it
 (marked *derived*):
 
-- one config = one bench run per domain over 35 sequences on the default set (4 + 7 + 4 at 50
-  frames, 10 + 10 at 10 frames; 55 with the paper's 30 RE10K sequences) plus scoring; the reference
-  (exact engine) is measured once per frame sample;
+- one config = one bench run per domain over 55 sequences (4 + 7 + 4 at 50 frames, 10 + 30 at 10
+  frames) plus scoring; the reference (exact engine) is measured once per frame sample;
 - precision search: 1 base + 19 single-layer configs, then one config per accepted or tried layer
   [paper, Sec. 4.4: the search "stops after two layers, block 15 and block 4". *Derived*, not stated
   in the paper: by this procedure that is 21 configs (exact reference + base + 19 single-layer)
@@ -112,5 +115,6 @@ python3 -m pytest calibration/tests -q
 
 They check the config strings against `configs/*.toml`, the worst-dataset rule, both searches on a
 synthetic additive accuracy model, the threshold rule, the TOML keys and comment, the choice of
-frame maps, and (when the official evaluator is available) a full `check` run with
+frame maps, the paper's calibration sequences and frames per sample, and (when the official
+evaluator is available) a full `check` run with
 `eval/tests/fake_rawatta.py` standing in for the binary.

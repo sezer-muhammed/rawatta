@@ -1,5 +1,5 @@
 {
- "_note": "Evaluation/calibration splits. run_eval.py --split eval drops each dataset's 'calibration' sequences from its frame maps. calibration/calibrate.py reads the 'calibration' entries. Extracted from the authors' research codebase (the calibration lists and evaluation maps of the paper's runs and the calibration protocol's notes).",
+ "_note": "The earlier protocol's calibration lists. run_eval.py --subsets full --split eval drops each dataset's 'calibration' sequences from its frame maps. The paper's own evaluation and calibration subsets are in paper/ (the default of run_eval.py and calibration/calibrate.py). Extracted from the authors' research codebase (the calibration lists and evaluation maps of the earlier protocol's runs).",
  "co3d": {
   "calibration": [
    "banana_434_61617_120791", "banana_47_2694_7604", "banana_595_90690_181239",
@@ -15,11 +15,11 @@
    "02b59cd60efb924e", "040de715f9303ba5", "05e2f342142bc50d", "05ef56b2656c9318",
    "0c4a239e265ae1c3", "0e3951bf1db22064"
   ],
-  "eval_note": "the other 190 sequences = the earlier protocol's re10k_eval_s0 map exactly (checked). The paper's tables used a 38-sequence subset (re10k_eval_v2) and calibrated on 30 sequences outside it (co3d_train/re10k_train maps); those two lists were not kept in the authors' research codebase, so they cannot be reproduced exactly here."
+  "eval_note": "the other 190 sequences = the earlier protocol's re10k_eval_s0 map exactly (checked). The paper's tables used 38 of them (every fifth in sorted order) and calibrated on these 10 plus 20 more outside the 38: paper/re10k.json, paper/calibration.json."
  },
  "7scenes": {
   "calibration": [],
-  "eval_note": "test sequences (TestSplit.txt), 18 in the manifest; the paper's tables report 10 sequences, a subset that was not recorded. Calibration uses separate train sequences (dataset 7scenes_train: first TrainSplit sequence of each scene, eval/data/sevenscenes.py --split train)."
+  "eval_note": "test sequences (TestSplit.txt), 18 in the manifest; the paper's runs used all 18 (its Supp. Tab. 12 says 10, a wrong count: paper/7scenes.json). Calibration uses separate train sequences (dataset 7scenes_train: first TrainSplit sequence of each scene, eval/data/sevenscenes.py --split train)."
  },
  "tum_dynamic": {
   "calibration": [],
