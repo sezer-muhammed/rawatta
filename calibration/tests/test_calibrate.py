@@ -160,6 +160,21 @@ def test_map_file_prefers_seeded_50_frame_maps(tmp_path, capsys):
         c._map_file(tmp_path, "tum_dynamic_train", 1)
 
 
+def test_domains_use_the_paper_calibration_data(tmp_path):
+    """Object and indoor domains: the paper's CO3Dv2 and RE10K calibration sequences and frames for
+    every frame sample (eval/manifests/paper/calibration.json); outdoor: its four scenes."""
+    import run_eval  # noqa: PLC0415
+
+    pc = run_eval.paper_calibration()["domains"]
+    for seed in (0, 1, 2):
+        doms = {d.name: d for d in c.domains(tmp_path, seed, only=["outdoor", "object", "indoor"])}
+        assert doms["object"].fmap == pc["object"]["frames"][str(seed)]
+        assert doms["indoor"].fmap == pc["indoor"]["frames"][str(seed)] and len(doms["indoor"].fmap) == 30
+        assert doms["outdoor"].scenes == ["bicycle", "garden", "stump", "kitchen"]
+    own = c.domains(tmp_path, 1, re10k_cal=pc["indoor"]["sequences"][:3], only=["indoor"])[0]
+    assert list(own.fmap) == sorted(pc["indoor"]["sequences"][:3])
+
+
 def test_help():
     r = subprocess.run([sys.executable, str(CAL / "calibrate.py"), "--help"], capture_output=True, text=True)
     assert r.returncode == 0 and "worst" in r.stdout and "default: operator" in r.stdout
@@ -181,9 +196,9 @@ def test_check_end_to_end_with_fake_bench(tmp_path):
     from PIL import Image  # noqa: PLC0415
 
     data = tmp_path / "data"
-    sp = run_eval.splits()
+    pc = run_eval.paper_calibration()["domains"]
     for ds, dom in (("co3d", "object"), ("re10k", "indoor")):
-        fm = {k: v for k, v in run_eval.frame_map(ds, 0, split="all").items() if k in sp[ds]["calibration"][:2]}
+        fm = {k: v for k, v in run_eval.frame_map(ds, 0, split="all").items() if k in pc[dom]["sequences"][:2]}
         te.make_omega_dataset(data, ds, {k: max(v) + 1 for k, v in fm.items()}, False, sample=fm)
     rng = np.random.default_rng(0)
     for ds in ("7scenes_train", "tum_dynamic_train"):
@@ -191,7 +206,7 @@ def test_check_end_to_end_with_fake_bench(tmp_path):
         te.make_omega_dataset(data, ds, {"seqA": 60}, True, sample=fm)
         (data / "_frames").mkdir(exist_ok=True)
         (data / "_frames" / f"{ds}_n50.json").write_text(json.dumps(fm))
-    for sc in sp["mipnerf360"]["calibration"][:1]:
+    for sc in pc["outdoor"]["sequences"][:1]:
         sd = data / "mipnerf360" / sc
         (sd / "images_4").mkdir(parents=True)
         poses = {}

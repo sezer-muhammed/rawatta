@@ -4,21 +4,28 @@
 manifests, run `rawatta bench`, score with the official evaluator, print a table.
 
     python3 eval/run_eval.py --data $DATA --datasets paper --configs exact,rawatta,rawatta-fast \
-        [--seeds 0,1,2] [--reference exact] [--out runs/eval-<stamp>] [--reps 0] [--no-depth]
+        [--seeds 0,1,2] [--subsets paper|full] [--reference exact] [--out runs/eval-<stamp>] [--reps 0] [--no-depth]
 
 Datasets (prepared under `$DATA/<name>` by eval/data/*.py; manifests in eval/manifests/):
 
-| name | layout | frames (map) | notes |
-|---|---|---|---|
-| eth3d | omega | VGGT-Omega's official 10-frame map, every seed | depth |
-| sintel | omega | official 10-frame map (from the pinned official source) | depth; not in the paper's tables |
-| co3d | omega | `co3d_s<seed>` | pose only; eval split = the 8 categories outside the calibration set (40 seqs) |
-| re10k | omega | `re10k_s<seed>` | pose only; eval split = sequences outside the calibration list |
-| 7scenes, nrgbd, tum_dynamic | omega | `<name>_s<seed>` (10 random frames), or `--map n50` | depth |
-| mipnerf360 | colmap | `--frames N` evenly spaced (`--seeds` >= 1: seeded random) | pose only (COLMAP GT) |
+| name | layout | sequences: `--subsets paper` (default) / `full` | frames (map) | notes |
+|---|---|---|---|---|
+| eth3d | omega | 13 / 13 | VGGT-Omega's official 10-frame map, every seed | depth |
+| sintel | omega | - / official map | official 10-frame map (from the pinned official source) | depth; not in the tables |
+| co3d | omega | 40 / 40 (the 8 categories outside banana, donut) | `co3d_s<seed>` | pose only |
+| re10k | omega | 38 / 190 (outside the earlier 10-sequence calibration list) | `re10k_s<seed>` | pose only |
+| 7scenes | omega | 18 / 18 | `7scenes_s<seed>` (10 random frames), or `--map n50` | depth |
+| nrgbd, tum_dynamic | omega | 9, 8 / 9, 8 | `<name>_s<seed>` (10 random frames), or `--map n50` | depth |
+| mipnerf360 | colmap | `--scenes` | `--frames N` evenly spaced (`--seeds` >= 1: seeded random) | pose only (COLMAP GT) |
 
+`--subsets paper` (the default) evaluates exactly the sequences and per-seed frames of the paper's
+tables (eval/manifests/paper/<dataset>.json, seeds 0, 1, 2); `--subsets full` evaluates every
+manifest sequence outside the earlier protocol's calibration lists (eval/manifests/splits.json;
+`--split all`: no exclusion). The full RE10K set is not sequence-disjoint from the paper's RE10K
+calibration (20 of its 30 sequences are among the 190).
 `--datasets paper` = eth3d,co3d,re10k,7scenes,nrgbd,tum_dynamic (the six evaluation datasets).
-`--map` overrides the map for every dataset (`s0|s1|s2|n50|official|<file.json>`).
+`--map` overrides the map for every dataset (`s0|s1|s2|n50|official|<file.json>`); with the paper
+subsets it is restricted to the paper's sequences.
 
 Steps per (dataset, seed): `<out>/<dataset>-s<seed>/job.json` -> `rawatta bench --job`
 -> `score.py` -> `<out>/results.json`. Then the table: AUC@3, AUC@30 (and delta1.25,
@@ -33,7 +40,7 @@ Other flags: `--rawatta PATH` (binary, default `rawatta` on PATH), `--weights` (
 RAWATTA_WEIGHTS), `--score-python` (interpreter with numpy/torch/opencv/Pillow for the
 scorer, default this one), `--skip-bench` (re-score existing cells), `--dry-run` (write the
 jobs and print the commands only), `--keep` (keep depth/conf .npy; deleted after scoring
-by default), `--max-scenes`, `--split all` (no calibration exclusion), `--points`.
+by default), `--max-scenes`, `--split all` (full subsets: no calibration exclusion), `--points`.
 """
 from __future__ import annotations
 
@@ -52,6 +59,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 MANIFESTS = HERE / "manifests"
+PAPER_SUBSETS = MANIFESTS / "paper"  # the paper's sequences and per-seed frames (eval/paper_subsets.py)
 PAPER = ("eth3d", "co3d", "re10k", "7scenes", "nrgbd", "tum_dynamic")
 OMEGA_DATASETS = ("eth3d", "sintel", "co3d", "re10k", "7scenes", "nrgbd", "tum_dynamic")
 DEPTH = {"eth3d", "sintel", "7scenes", "nrgbd", "tum_dynamic"}
@@ -73,8 +81,33 @@ def manifest(ds: str) -> dict:
     return json.loads((MANIFESTS / f"{ds}.json").read_text())
 
 
-def frame_map(ds: str, seed: int, map_arg: str | None = None, split: str = "eval") -> dict[str, list[int]]:
-    """{scene: [frame indices]} for one omega-layout dataset and seed."""
+def paper_subset(ds: str) -> dict:
+    """The paper's evaluation subset of one dataset: sequences and frames per seed."""
+    return json.loads((PAPER_SUBSETS / f"{ds}.json").read_text())
+
+
+def paper_calibration() -> dict:
+    """The paper's calibration data per domain (eval/manifests/paper/calibration.json)."""
+    return json.loads((PAPER_SUBSETS / "calibration.json").read_text())
+
+
+def frame_map(ds: str, seed: int, map_arg: str | None = None, split: str = "eval",
+              subsets: str = "full") -> dict[str, list[int]]:
+    """{scene: [frame indices]} for one omega-layout dataset and seed.
+
+    subsets="paper": the paper's sequences of one of the six evaluation datasets, with its frames for
+    `seed` (or `map_arg` restricted to those sequences); `split` does not apply (the paper's subsets
+    are disjoint from its calibration data). subsets="full": every manifest sequence, without the
+    earlier protocol's calibration sequences when split="eval"."""
+    if subsets == "paper" and ds in PAPER:
+        sub = paper_subset(ds)
+        if map_arg is None:
+            if str(seed) not in sub["frames"]:
+                raise SystemExit(f"{ds}: the paper's frame maps cover seeds {sub['seeds']}, not {seed} "
+                                 "(use --subsets full for other seeds)")
+            return dict(sub["frames"][str(seed)])
+        keep = set(sub["sequences"])
+        return {k: v for k, v in frame_map(ds, seed, map_arg, "all").items() if k in keep}
     if map_arg and Path(map_arg).is_file():
         m = json.loads(Path(map_arg).read_text())
     elif ds in SEED_FREE or map_arg == "official":
@@ -269,7 +302,10 @@ def main() -> int:
     ap.add_argument("--reference", default="exact")
     ap.add_argument("--seeds", default="0")
     ap.add_argument("--map", default=None, help="override frame map: s0|s1|s2|n50|official|<file>")
-    ap.add_argument("--split", choices=("eval", "all"), default="eval")
+    ap.add_argument("--subsets", choices=("paper", "full"), default="paper",
+                    help="paper: the paper's sequences and frames (default); full: all manifest sequences")
+    ap.add_argument("--split", choices=("eval", "all"), default="eval",
+                    help="full subsets only: eval drops the earlier calibration sequences, all keeps them")
     ap.add_argument("--frames", type=int, default=50, help="colmap datasets: frames per scene")
     ap.add_argument("--scenes", default=None, help="colmap datasets: comma list (default: all in --data)")
     ap.add_argument("--max-scenes", type=int, default=None)
@@ -322,7 +358,7 @@ def main() -> int:
                 (cells / "score_job.json").write_text(json.dumps({"sequences": seqs}, indent=1))
                 depth = False
             else:
-                fmap = frame_map(ds, seed, a.map, a.split)
+                fmap = frame_map(ds, seed, a.map, a.split, a.subsets)
                 if a.max_scenes:
                     fmap = dict(list(fmap.items())[: a.max_scenes])
                 seqs, used = omega_sequences(root, fmap)
@@ -375,7 +411,7 @@ def main() -> int:
                 if any(x is not None for x in v)}
     table = format_table(res, configs, datasets, a.reference, lat_mean or None)
     (out / "results.json").write_text(json.dumps({
-        "configs": configs, "reference": a.reference, "datasets": datasets, "seeds": seeds,
+        "configs": configs, "reference": a.reference, "datasets": datasets, "seeds": seeds, "subsets": a.subsets,
         "results": {str(s): v for s, v in res.items()}, "records": records, "latency_ms": lat_mean,
         "protocol": "VGGT-Omega eval/evaluate.py per-scene logic, official functions (pinned commit)",
     }, indent=1))

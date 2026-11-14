@@ -11,7 +11,8 @@ VGGT-Ω PyTorch code on the same frames for the baseline column.
 | `score.py` | scores bench output with the official evaluator functions (`eval/evaluate.py` per-scene logic: `Dataset.load`, `_source_crop`, `crop_depth`, `resize_depth`, `depth_metrics`, `pose_errors`, AUC pooled over all pairs); COLMAP ground truth for Mip-NeRF 360; optional point-map metrics |
 | `omega_src.py` | downloads the official VGGT-Ω source at the pinned commit (`48b23c8`) into a cache and imports its modules; the official code is FAIR-licensed and not vendored |
 | `data/` | per-dataset download and conversion scripts (see `DATASETS.md` for sources and licences), `manifest.py write|verify` |
-| `manifests/` | the paper's frame maps and SHA-256 of every prepared file (extracted from the authors' research codebase), `splits.json` (calibration sequences excluded from evaluation) |
+| `manifests/` | frame maps per seed and SHA-256 of every prepared file (extracted from the authors' research codebase); `paper/`: the sequences and per-seed frames of the paper's evaluation and calibration data; `splits.json`: the earlier protocol's calibration lists (excluded by `--subsets full`) |
+| `paper_subsets.py` | rebuilds `manifests/paper/` from the manifests with the rules the paper's subsets were made with (`check` / `write`) |
 | `official/` | `Dockerfile` (PyTorch 2.9.1, CUDA 12.8, official repo at the pinned commit), `time_official.py` (official `eval/model.py` Predictor: accuracy + CUDA-event latency + peak memory), `run_official.sh` (build + run, optional GPU lock) |
 
 ## Setup
@@ -26,8 +27,11 @@ Prepare the datasets as described in `DATASETS.md` (only sampled frames are down
 ## Run
 
 ```sh
-# the paper's protocol: six datasets, 10 frames per sequence, three frame-sampling seeds
+# the paper's protocol: six datasets, the paper's sequences, 10 frames per sequence, seeds 0, 1, 2
 python3 eval/run_eval.py --data $DATA --datasets paper --configs exact,rawatta,rawatta-fast --seeds 0,1,2
+
+# every manifest sequence instead (RE10K: 190 instead of 38; the other datasets are the same)
+python3 eval/run_eval.py --data $DATA --datasets paper --configs exact,rawatta --seeds 0,1,2 --subsets full
 
 # one dataset, write the jobs only
 python3 eval/run_eval.py --data $DATA --datasets eth3d --configs exact,rawatta --dry-run
@@ -41,8 +45,32 @@ eval/official/run_official.sh -- --data-root /data/eth3d --frames /out/fmap.json
 
 Paper reference values (Tab. 1 of the paper, exact engine, AUC@3, N = 10, mean over three seeds):
 ETH3D 49.91, CO3D 51.21, RE10K 38.49, 7-Scenes 21.11, NRGBD 85.46, TUM-dynamic 39.66; worst-dataset
-ΔAUC@3 against the exact engine: RAWATTA −0.51 ± 0.11, RAWATTA-Fast −0.80 ± 0.17. RE10K and 7-Scenes
-used subsets that the manifests do not record (see `DATASETS.md`), so a full-manifest run differs there.
+ΔAUC@3 against the exact engine: RAWATTA −0.51 ± 0.11, RAWATTA-Fast −0.80 ± 0.17.
+
+## The paper's subsets
+
+`manifests/paper/<dataset>.json` lists, for each of the six evaluation datasets, the sequences the
+paper's tables used and their frames for seeds 0, 1 and 2 (`calibration.json`: the same for the
+five calibration datasets). They were recovered from the authors' experiment records; `--subsets
+paper`, the default of `run_eval.py`, evaluates exactly them.
+
+| dataset | sequences | frames for seed s |
+|---|---|---|
+| ETH3D | 13 (all) | VGGT-Ω's official 10 frames, every seed |
+| CO3Dv2 | 40: the 8 categories outside banana and donut | `co3d_s<s>` |
+| RealEstate10K | 38: every fifth of the 190 sorted ids outside the earlier 10-sequence calibration list | `re10k_s<s>` |
+| 7-Scenes | 18: all test sequences | `7scenes_s<s>` |
+| NRGBD | 9 (all) | `nrgbd_s<s>` |
+| TUM-dynamic | 8 (all) | `tum_dynamic_s<s>` |
+
+Frame selection is a deterministic function of the sequence's frame count and the seed (10
+frames drawn with numpy `default_rng(seed)`, `data/common.py`); every seeded map in `manifests/`
+regenerates from the frame counts, and the paper's runs used these maps restricted to the
+sequences above. The paper's Supp. Tab. 12 gives 10 7-Scenes test sequences; the records, and the
+pair counts behind every 7-Scenes value of Supp. Tab. 10, show that all 18 were used
+(`manifests/paper/7scenes.json`). `python3 eval/paper_subsets.py check` confirms that the files
+follow the rules; `tests/test_paper_subsets.py` checks them against the recorded sequence lists,
+file hashes and sizes.
 
 ## Tests
 

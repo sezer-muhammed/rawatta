@@ -99,9 +99,12 @@ VERSION=0.1.0              # must equal `version` in Cargo.toml ([workspace.pack
 
 The paper and this release must not disagree once both are public:
 
-- [ ] The two sentences that promise per-seed frame maps of every evaluation sequence (supplementary material:
-  the data-split paragraph and the reproducibility checklist) become: "Frame maps for ETH3D, CO3Dv2, NRGBD and TUM-dynamic are
-  released with the code; the RE10K and 7-Scenes evaluation subsets were not kept."
+- [ ] Supp. Tab. 12 ("Calibration vs evaluation data"), 7-Scenes row: "10 test sequences ($\times10$)" becomes
+  "18 test sequences ($\times10$)". The runs used all 18 test sequences (`eval/manifests/paper/7scenes.json`). The
+  promise of per-seed frame maps of every evaluation sequence (data-split paragraph and reproducibility checklist)
+  stands as written: `eval/manifests/paper/` releases them.
+- [ ] Sec. 4.4, "Data": "the supplement lists every sequence" becomes "the released frame maps list every sequence"
+  (the supplement gives counts only).
 - [ ] Sec. 4.2, "Merge and frame operators use the layer's format", becomes: "Frame layers run on the bf16
   kernel and merged layers on the 8-bit kernel." (as `configs/GRAMMAR.md` documents).
 - [ ] Optionally, the Tab. 1 caption: "against a worst-dataset loss of 1.20/1.03 for RAWATTA-Fast".

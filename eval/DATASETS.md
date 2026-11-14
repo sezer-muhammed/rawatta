@@ -54,21 +54,31 @@ Scripts that call the official VGGT-Ω `eval/prepare.py` or `eval/datasets.py` (
 (`eval/omega_src.py`); that code is under the FAIR Noncommercial Research License and is not part
 of this repository.
 
-## What the manifests cannot reproduce
+## The paper's subsets
 
-The authors' research codebase, from which these scripts were extracted, kept frame maps and file
-hashes for every dataset, but not the following subset lists, which existed only as files on the
-machine that ran the paper's experiments:
+The paper's tables used subsets of these datasets. They were recovered from the authors'
+experiment records and are released in `eval/manifests/paper/` with the frames of every sequence
+for seeds 0, 1 and 2 (rules and evidence in each file and in `eval/paper_subsets.py`):
 
-- RealEstate10K: the paper's 38-sequence evaluation subset (`re10k_eval_v2`) and its
-  30-sequence calibration subset. `run_eval.py` evaluates the 190 sequences outside the
-  10-sequence calibration list of the earlier protocol (identical to the earlier protocol's
-  `re10k_eval_s0` map).
-- 7-Scenes: the paper's tables report 10 test sequences; the manifest has all 18.
-- CO3Dv2 calibration frames: the paper's `co3d_train` map. `calibrate.py` uses the seeded maps of
-  the 10 banana/donut sequences from the manifest.
+| dataset | evaluation (`<dataset>.json`) | calibration (`calibration.json`) |
+|---|---|---|
+| ETH3D | 13 scenes, official frames | - |
+| CO3Dv2 | 40 sequences, 8 categories | banana and donut, 10 sequences × 10 frames |
+| RealEstate10K | 38 sequences: every fifth of the 190 sorted ids outside the earlier 10-sequence calibration list | 30 sequences: that list plus the first 20 sorted ids outside it and outside the 38 |
+| 7-Scenes | all 18 test sequences | first TrainSplit sequence of each scene, 7 × 50 frames |
+| NRGBD | 9 scenes | - |
+| TUM-dynamic | 8 sequences | the four `*_validation` takes, 4 × 50 frames |
+| Mip-NeRF 360 | - | bicycle, garden, stump, kitchen, 4 × 50 frames |
 
-Numbers from `run_eval.py` on the full manifests are therefore not expected to equal the
-paper's per-dataset numbers for RE10K and 7-Scenes, and a calibration search run with the default
-lists is not guaranteed to return exactly the paper's settings. Do not present such runs as a
-reproduction of Table 1's RE10K or 7-Scenes columns.
+For seed s, the 10-frame datasets use the manifest's `<dataset>_s<s>` map restricted to the
+subset; these maps are a deterministic function of each sequence's frame count and the seed
+(`common.sample_random`), so the data scripts regenerate them exactly. The 50-frame calibration
+frames of 7-Scenes train and TUM validation come from the data scripts (`<name>_n50`, and with
+`--seeded50` the seeds 1 and 2), and those of Mip-NeRF 360 from `run_eval.colmap_pick`.
+
+The paper's Supp. Tab. 12 gives "10 test sequences" for 7-Scenes. That count is wrong: the
+paper's runs used all 18 (see `eval/manifests/paper/7scenes.json`).
+
+`run_eval.py --subsets full` evaluates every manifest sequence outside the earlier protocol's
+calibration lists (`eval/manifests/splits.json`) instead; that differs from the paper only on
+RealEstate10K (190 sequences, 20 of which are in the paper's RE10K calibration set).

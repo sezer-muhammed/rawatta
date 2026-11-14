@@ -1,0 +1,51 @@
+{
+ "dataset": "tum_dynamic",
+ "name": "TUM-dynamic",
+ "role": "evaluation",
+ "frames_per_sequence": 10,
+ "seeds": [0, 1, 2],
+ "sequences": [
+  "sitting_halfsphere",
+  "sitting_rpy",
+  "sitting_static",
+  "sitting_xyz",
+  "walking_halfsphere",
+  "walking_rpy",
+  "walking_static",
+  "walking_xyz"
+ ],
+ "rule": "All 8 TUM RGB-D fr3 walking/sitting sequences (xyz, static, halfsphere, rpy). Seed s: the manifest's tum_dynamic_s<s> map.",
+ "provenance": "Recovered from the authors' experiment records: the paper's runs used the full tum_dynamic_s<seed> maps (8 sequences in their per-sequence records).",
+ "frames": {
+  "0": {
+   "sitting_halfsphere": [17, 43, 80, 187, 286, 327, 542, 675, 869, 901],
+   "sitting_rpy": [13, 32, 59, 138, 212, 242, 401, 499, 644, 666],
+   "sitting_static": [11, 27, 50, 118, 180, 206, 341, 425, 549, 567],
+   "sitting_xyz": [20, 49, 91, 212, 326, 372, 617, 769, 988, 1026],
+   "walking_halfsphere": [16, 41, 76, 178, 273, 311, 516, 643, 827, 858],
+   "walking_rpy": [14, 35, 64, 151, 231, 264, 438, 545, 703, 728],
+   "walking_static": [11, 29, 53, 124, 191, 218, 361, 449, 580, 599],
+   "walking_xyz": [13, 33, 61, 144, 221, 252, 418, 521, 671, 694]
+  },
+  "1": {
+   "sitting_halfsphere": [37, 153, 266, 333, 501, 543, 801, 877, 1010, 1012],
+   "sitting_rpy": [27, 113, 197, 246, 370, 401, 592, 649, 747, 749],
+   "sitting_static": [23, 96, 168, 210, 315, 341, 505, 553, 636, 639],
+   "sitting_xyz": [42, 174, 302, 379, 571, 618, 912, 998, 1150, 1151],
+   "walking_halfsphere": [35, 146, 253, 317, 477, 516, 763, 835, 961, 963],
+   "walking_rpy": [29, 124, 215, 269, 405, 438, 647, 709, 816, 818],
+   "walking_static": [24, 102, 177, 222, 333, 361, 533, 585, 672, 675],
+   "walking_xyz": [28, 118, 205, 257, 386, 418, 618, 677, 779, 781]
+  },
+  "2": {
+   "sitting_halfsphere": [98, 116, 277, 317, 357, 440, 481, 641, 867, 887],
+   "sitting_rpy": [72, 85, 205, 234, 264, 325, 356, 475, 641, 655],
+   "sitting_static": [61, 73, 174, 199, 226, 277, 303, 405, 547, 558],
+   "sitting_xyz": [111, 132, 316, 361, 406, 501, 547, 729, 986, 1010],
+   "walking_halfsphere": [93, 110, 264, 302, 340, 419, 458, 610, 825, 845],
+   "walking_rpy": [79, 93, 224, 256, 289, 355, 388, 519, 701, 716],
+   "walking_static": [65, 77, 184, 211, 238, 293, 320, 428, 578, 590],
+   "walking_xyz": [75, 89, 213, 244, 276, 339, 371, 495, 669, 684]
+  }
+ }
+}

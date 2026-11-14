@@ -1,0 +1,55 @@
+{
+ "dataset": "nrgbd",
+ "name": "NRGBD",
+ "role": "evaluation",
+ "frames_per_sequence": 10,
+ "seeds": [0, 1, 2],
+ "sequences": [
+  "breakfast_room",
+  "complete_kitchen",
+  "green_room",
+  "grey_white_room",
+  "kitchen",
+  "morning_apartment",
+  "staircase",
+  "thin_geometry",
+  "whiteroom"
+ ],
+ "rule": "All 9 Neural RGB-D synthetic scenes. Seed s: the manifest's nrgbd_s<s> map.",
+ "provenance": "Recovered from the authors' experiment records: the paper's runs used the full nrgbd_s<seed> maps (9 scenes in their per-sequence records).",
+ "frames": {
+  "0": {
+   "breakfast_room": [19, 47, 87, 204, 313, 357, 592, 738, 949, 985],
+   "complete_kitchen": [19, 49, 90, 212, 325, 371, 615, 766, 984, 1022],
+   "green_room": [23, 58, 108, 252, 387, 442, 733, 913, 1172, 1218],
+   "grey_white_room": [24, 61, 112, 261, 401, 458, 759, 945, 1214, 1262],
+   "kitchen": [25, 61, 113, 265, 407, 465, 771, 961, 1233, 1282],
+   "morning_apartment": [15, 37, 68, 161, 246, 281, 466, 580, 748, 774],
+   "staircase": [18, 46, 86, 201, 308, 352, 583, 726, 934, 969],
+   "thin_geometry": [6, 16, 29, 69, 104, 120, 198, 246, 321, 328],
+   "whiteroom": [27, 68, 125, 293, 450, 514, 853, 1062, 1363, 1417]
+  },
+  "1": {
+   "breakfast_room": [40, 167, 290, 363, 547, 593, 875, 957, 1103, 1105],
+   "complete_kitchen": [42, 174, 301, 377, 568, 615, 909, 994, 1145, 1146],
+   "green_room": [50, 207, 359, 449, 678, 733, 1083, 1184, 1364, 1366],
+   "grey_white_room": [51, 214, 371, 465, 702, 760, 1122, 1226, 1413, 1414],
+   "kitchen": [52, 218, 377, 473, 713, 772, 1140, 1245, 1436, 1437],
+   "morning_apartment": [31, 132, 229, 286, 431, 466, 689, 754, 868, 870],
+   "staircase": [39, 165, 286, 358, 539, 583, 862, 943, 1086, 1088],
+   "thin_geometry": [13, 56, 98, 123, 182, 198, 293, 322, 369, 372],
+   "whiteroom": [58, 241, 417, 522, 788, 853, 1260, 1376, 1587, 1588]
+  },
+  "2": {
+   "breakfast_room": [107, 126, 303, 346, 390, 480, 525, 700, 946, 969],
+   "complete_kitchen": [111, 131, 314, 359, 405, 499, 545, 726, 982, 1006],
+   "green_room": [132, 156, 375, 428, 482, 594, 649, 865, 1170, 1200],
+   "grey_white_room": [137, 162, 388, 443, 499, 615, 672, 895, 1212, 1242],
+   "kitchen": [139, 165, 394, 451, 507, 625, 683, 910, 1231, 1263],
+   "morning_apartment": [84, 99, 238, 272, 307, 378, 413, 552, 745, 763],
+   "staircase": [105, 124, 298, 341, 384, 473, 517, 689, 932, 954],
+   "thin_geometry": [36, 42, 101, 116, 131, 161, 176, 237, 318, 323],
+   "whiteroom": [153, 182, 436, 498, 560, 691, 754, 1005, 1361, 1396]
+  }
+ }
+}
