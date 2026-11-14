@@ -6,13 +6,17 @@ Attention Approximation*, the values the paper reports, and what this repository
 Every expected value below is from the paper (arXiv XXXX.XXXXX, version 1) and names its table ("Tab." = main paper,
 "Supp. Tab." = supplementary material). The paper's runs used the authors' research codebase, from which this release
 was extracted; the kernel sources are unchanged apart from renames ([crates/ARCHITECTURE.md](crates/ARCHITECTURE.md)).
-End-to-end parity with the paper's runs is pending until the weights are available.
+The dataset runs behind the paper's tables have not been repeated with this release's binary yet.
 
-> **Status.** The full runs with the VGGT-Ω weights have not yet been done for this release, so no table below has
-> been re-measured with it. What has been checked without the weights: the config strings in this file parse in the
-> release binary, and the evaluation and calibration pipelines, scored with the official evaluator, pass their
-> end-to-end tests with a stand-in binary (`python3 -m pytest eval/tests calibration/tests`). This file will list
-> measured values once they exist.
+> **Status.** The paper's tables have not been re-measured with this release's binary: the dataset runs below were
+> not repeated. What has been checked with the real VGGT-Ω weights (RTX 4070 SUPER, GPU otherwise idle): the weight
+> converter on the official checkpoint, the weight-loading GPU tests, and `rawatta run` on the example scene
+> `buddha` (34 photos, 512x288). There the forward pass took 1063 ms (`exact`), 897 ms (`rawatta`) and 858 ms
+> (`rawatta-fast`), median of 3 runs after 1 warm-up. Against `exact`, `rawatta` changed camera rotations by at most
+> 0.29 deg (mean 0.08), translation directions by at most 0.18 deg and depth by 0.1% (median); `rawatta-fast` by
+> at most 0.90 deg, 0.90 deg and 0.6%. These are smoke checks on one scene, not the paper's protocol. Without the
+> weights, the evaluation and calibration pipelines, scored with the official evaluator, pass their end-to-end tests
+> with a stand-in binary (`python3 -m pytest eval/tests calibration/tests`).
 
 ## 1. Hardware
 

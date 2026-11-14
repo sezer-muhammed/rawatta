@@ -3,7 +3,8 @@
 // For each target x viewport x colour scheme: console errors, page errors, failed requests, broken images,
 // broken internal links and anchors, horizontal overflow, axe-core WCAG 2 A/AA violations; plus screenshots.
 // Also: the quick start shows the canonical commands verbatim, no "Ours" label appears, and (dev target) the viewer
-// loads the synthetic scene with all 8 cameras and links the photo licence in its caption.
+// loads its scene with all cameras (shipped: buddha, 34; dev: the synthetic scene, 8) and links the photo licence
+// (CC BY 4.0 for both) in its caption.
 // Usage: node site-src/dev/check.cjs [-h|--help] [SCREENSHOT_DIR]   (needs the two servers that check.sh starts)
 const fs = require("fs");
 const path = require("path");
@@ -18,8 +19,10 @@ const OUT = process.argv[2] || "/w/site-src/dev/out/shots";
 fs.mkdirSync(OUT, { recursive: true });
 
 const targets = [
-  { name: "ship", url: "http://127.0.0.1:8811/rawatta/", viewer: false },   // docs/ exactly as committed
-  { name: "dev", url: "http://127.0.0.1:8812/rawatta/", viewer: true },     // docs/ + synthetic example scene
+  // docs/ exactly as committed: the real gallery, whose first scene (buddha) has 34 cameras
+  { name: "ship", url: "http://127.0.0.1:8811/rawatta/", viewer: true, cams: 34 },
+  // docs/ + synthetic example scene (8 cameras)
+  { name: "dev", url: "http://127.0.0.1:8812/rawatta/", viewer: true, cams: 8 },
 ];
 const viewports = [
   { name: "1280", width: 1280, height: 800, dsf: 1, mobile: false },
@@ -74,7 +77,7 @@ const SYNTH_LICENCE = "https://creativecommons.org/licenses/by/4.0/";
           } catch (_) { /* reported below */ }
           await page.waitForTimeout(1500);
           r.viewerStatus = await page.locator("#viewer-status").textContent();
-          r.viewerOk = /points · 8 cameras$/.test(r.viewerStatus || "");
+          r.viewerOk = new RegExp(`points · ${t.cams} cameras$`).test(r.viewerStatus || "");
           r.captionLinks = await page.evaluate(() => [...document.querySelectorAll("#viewer-caption a")].map((a) => ({ href: a.href, text: a.textContent })));
           r.captionOk = r.captionLinks.some((l) => l.href === "https://creativecommons.org/licenses/by/4.0/" && l.text === "CC BY 4.0");
           await page.locator("#interactive").screenshot({ path: path.join(OUT, `${tag}-viewer.png`) });
@@ -95,7 +98,8 @@ const SYNTH_LICENCE = "https://creativecommons.org/licenses/by/4.0/";
           links: [...document.querySelectorAll("[data-arxiv]")].map((x) => ({ href: x.getAttribute("href"), disabled: x.getAttribute("aria-disabled") })),
           bibId: (document.getElementById("bibtex-code").textContent.match(/arXiv:(\S+)\}/) || [])[1],
         }));
-        const arxivOk = t.viewer
+        // only the dev copy flips ARXIV_ID to a fake id (check.sh); the shipped page keeps the placeholder
+        const arxivOk = t.name === "dev"
           ? r.arxiv.links.every((l) => l.href && l.href.includes("2611.00001") && !l.disabled) && r.arxiv.bibId === "2611.00001"
           : r.arxiv.links.every((l) => !l.href && l.disabled === "true") && r.arxiv.bibId === "XXXX.XXXXX";
         r.codeText = await page.evaluate(() => [...document.querySelectorAll("#use pre code")].map((c) => c.textContent).join("\n\n"));
@@ -143,7 +147,7 @@ const SYNTH_LICENCE = "https://creativecommons.org/licenses/by/4.0/";
         }
         r.hosts = [...r.hosts];
         const imgBad = r.images.filter((i) => !i.ok || !i.alt);
-        const expectedHosts = t.viewer ? ["127.0.0.1:8812", "cdn.jsdelivr.net"] : ["127.0.0.1:8811"];
+        const expectedHosts = [new URL(t.url).host, ...(t.viewer ? ["cdn.jsdelivr.net"] : [])];
         r.unexpectedHosts = r.hosts.filter((h) => !expectedHosts.includes(h));
         r.problems = [
           ...r.consoleErrors.map((x) => "console: " + x), ...r.pageErrors.map((x) => "pageerror: " + x),
@@ -152,7 +156,7 @@ const SYNTH_LICENCE = "https://creativecommons.org/licenses/by/4.0/";
           ...(r.overflow.scrollWidth > r.overflow.clientWidth ? ["horizontal overflow: " + JSON.stringify(r.overflow)] : []),
           ...r.axe.map((v) => `axe ${v.id} (${v.impact}) x${v.n}: ${v.nodes.join(" | ")}`),
           ...r.unexpectedHosts.map((h) => "unexpected host: " + h),
-          ...(t.viewer && !r.viewerOk ? ["viewer did not load the scene with 8 cameras: " + r.viewerStatus] : []),
+          ...(t.viewer && !r.viewerOk ? [`viewer did not load the scene with ${t.cams} cameras: ` + r.viewerStatus] : []),
           ...(t.viewer && !r.captionOk ? ["viewer caption has no licence link to " + SYNTH_LICENCE + ": " + JSON.stringify(r.captionLinks)] : []),
           ...r.missingCommands.map((c) => "canonical command missing from the quick start: " + c.split("\n")[0]),
           ...(r.oursLabel ? ['the page text contains "Ours"'] : []),

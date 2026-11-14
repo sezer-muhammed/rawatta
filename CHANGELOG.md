@@ -23,6 +23,8 @@ renames (crates/ARCHITECTURE.md). End-to-end parity with the paper's runs is pen
 - Calibration check and precision / schedule searches (`calibration/`).
 - PyTorch harnesses used for the paper's VGGT-1B and π³ experiments, unsupported (`research/`).
 - Docker image (`docker/`), CI and release workflows, example scripts and scenes (`examples/`), project page (`docs/`).
+- Project-page gallery: two example scenes (Buddha, CC BY 4.0; Korno climbing rock, CC0) reconstructed with
+  `--config rawatta` on an RTX 4070 SUPER, shown in an interactive point-cloud viewer.
 
 ### Known limitations
 
