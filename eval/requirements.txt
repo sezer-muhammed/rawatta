@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Scorer and dataset preparation (eval/), Python 3.10+.
+# torch is only needed by the official metrics (pose_errors, resize_depth); the CPU wheel is enough:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+numpy>=1.24,<2
+opencv-python-headless>=4.8
+Pillow>=9
+torch>=2.1

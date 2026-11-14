@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+# The RAWATTA-Fast setting: `rawatta run --config rawatta-fast`. The grammar
+# string below is what the name stands for (see GRAMMAR.md).
+
+name = "rawatta-fast"
+display_name = "RAWATTA-Fast"
+grammar = "L0:frame/L3:merge4/L4:frame/L5:frame/L19:merge4@sagepp~L15=sage.pvh16"
+description = """
+RAWATTA's numeric formats plus an operator schedule: frame attention (each \
+frame attends only to itself) on global blocks 0, 4 and 5, and 4x4-merged keys \
+and values of frames 1.. with a +log(count) bias (merge4) on blocks 3 and 19; \
+merging never pools the keys of the first frame. The other global layers stay dense \
+on SageAttention2++ (INT8 QK^T, FP8 P.V, FP16 block accumulation), with \
+16-bit P.V on block 15. The schedule came from a greedy search under the \
+calibration check (one calibration sample, budget -1), fixed before any \
+evaluation run. Slightly faster than RAWATTA and slightly less accurate."""
+min_compute_capability = "8.9"
+paper_reference = "Sec. 4.1 (Operator per regime) and Sec. 4.4 (Calibration check and search, paragraph Schedule); supplementary material, section Configuration names (table: paper name to engine configuration)."

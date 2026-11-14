@@ -1,0 +1,125 @@
+{
+ "note": "Worst-dataset delta AUC@3/@30 against Official VGGT-Omega (mean over seeds where 3 ran, seed 0 otherwise); N=50 latency in ms, RTX 4070 SUPER, one timing session. Rounded from the paper's sources: latencies to 0.1 ms, delta AUC to 1e-4. Five latencies are replaced in make_figs.py by the paper's Tab. 1 values.",
+ "methods": {
+  "Official VGGT-Omega": {
+   "latency_ms": 3605.7,
+   "seeds": 3,
+   "worst3": {
+    "mean": 0.0,
+    "mean30": 0.0
+   }
+  },
+  "Exact engine": {
+   "latency_ms": 2367.8,
+   "seeds": 3,
+   "worst3": {
+    "mean": -0.861,
+    "mean30": -0.2976
+   }
+  },
+  "RAWATTA": {
+   "latency_ms": 1741.3,
+   "seeds": 3,
+   "worst3": {
+    "mean": -1.0256,
+    "mean30": -0.3946
+   }
+  },
+  "RAWATTA-Fast": {
+   "latency_ms": 1616.4,
+   "seeds": 3,
+   "worst3": {
+    "mean": -1.1396,
+    "mean30": -1.1282
+   }
+  },
+  "threshold schedule": {
+   "latency_ms": 1592.0,
+   "seeds": 3,
+   "worst3": {
+    "mean": -1.1554,
+    "mean30": -1.1567
+   }
+  },
+  "greedy search, budget -2": {
+   "latency_ms": 1550.3,
+   "seeds": 3,
+   "worst3": {
+    "mean": -1.874,
+    "mean30": -0.6698
+   }
+  },
+  "SageAttention2, uniform": {
+   "latency_ms": 1801.6,
+   "seeds": 1,
+   "worst3": {
+    "mean": -2.4691,
+    "mean30": -1.0955
+   }
+  },
+  "SparseVGGT, default": {
+   "latency_ms": 3079.8,
+   "seeds": 3,
+   "worst3": {
+    "mean": -1.0444,
+    "mean30": -0.5112
+   }
+  },
+  "SparseVGGT, CDF 0.90": {
+   "latency_ms": 3063.7,
+   "seeds": 1,
+   "worst3": {
+    "mean": -0.7407,
+    "mean30": -0.6355
+   }
+  },
+  "GPA-VGGT, default": {
+   "latency_ms": 2770.6,
+   "seeds": 3,
+   "worst3": {
+    "mean": -3.142,
+    "mean30": -0.8901
+   }
+  },
+  "GPA-VGGT, r=0.5 on 9-23": {
+   "latency_ms": 2849.0,
+   "seeds": 1,
+   "worst3": {
+    "mean": -4.6481,
+    "mean30": -1.9167
+   }
+  },
+  "GPA-style merge, RAWATTA-Fast layers": {
+   "latency_ms": 1652.4,
+   "seeds": 3,
+   "worst3": {
+    "mean": -1.0256,
+    "mean30": -1.2536
+   }
+  },
+  "FastVGGT": {
+   "latency_ms": 2806.7,
+   "seeds": 1,
+   "worst3": {
+    "mean": -21.1852,
+    "mean30": -9.1738
+   }
+  },
+  "AVGGT/GPA layer split, RAWATTA precision": {
+   "latency_ms": 1362.8,
+   "seeds": 3,
+   "worst3": {
+    "mean": -37.8917,
+    "mean30": -28.4067
+   }
+  },
+  "frame 0-8 only, RAWATTA precision": {
+   "latency_ms": 1561.3,
+   "seeds": 3,
+   "worst3": {
+    "mean": -2.9725,
+    "mean30": -0.8205
+   }
+  }
+ }
+}

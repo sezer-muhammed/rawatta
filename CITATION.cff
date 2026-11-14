@@ -1,0 +1,43 @@
+# The arXiv identifier is not known yet: XXXX.XXXXX is replaced at launch (scripts/LAUNCH.md, step 2),
+# which also adds the arXiv DOI under `identifiers`.
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+type: software
+title: "RAWATTA: Regime-Aware Attention Approximation for VGGT-Omega, in Rust + CUDA"
+abstract: >-
+  Code for the paper "Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware
+  Attention Approximation". A native Rust + CUDA inference engine for the multi-view 3D transformer
+  VGGT-Omega with the training-free settings RAWATTA and RAWATTA-Fast and the exact engine, plus
+  weight conversion, evaluation and calibration tools. The code is under Apache-2.0, except
+  crates/vggt-omega, which is under the FAIR Noncommercial Research License like the VGGT-Omega
+  weights (research use only).
+authors:
+  - family-names: Sezer
+    given-names: M. Izzet
+    affiliation: Independent Researcher
+  - family-names: Dikkaya
+    given-names: Sevval Belkis
+    affiliation: Carnegie Mellon University
+repository-code: "https://github.com/sezer-muhammed/rawatta"
+url: "https://sezer-muhammed.github.io/rawatta/"
+version: 0.1.0
+keywords:
+  - multi-view 3D reconstruction
+  - VGGT-Omega
+  - attention approximation
+  - quantised attention
+  - CUDA
+  - Rust
+preferred-citation:
+  type: article
+  title: "Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware Attention Approximation"
+  authors:
+    - family-names: Sezer
+      given-names: M. Izzet
+      affiliation: Independent Researcher
+    - family-names: Dikkaya
+      given-names: Sevval Belkis
+      affiliation: Carnegie Mellon University
+  journal: "arXiv preprint arXiv:XXXX.XXXXX"
+  status: preprint
+  year: 2026

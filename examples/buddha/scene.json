@@ -1,0 +1,14 @@
+{
+  "id": "buddha",
+  "title": "Buddha head",
+  "kind": "object",
+  "fetched_photos": 34,
+  "source_photos": 67,
+  "credit": "Buddha Dataset by Simone Gasparini, Fabien Castan and Yann Lanthony (AliceVision), doi:10.5281/zenodo.1203283",
+  "licence": "CC BY 4.0",
+  "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+  "source": "https://github.com/alicevision/dataset_buddha",
+  "author": "Simone Gasparini, Fabien Castan, Yann Lanthony (AliceVision)",
+  "changes": "Every second photo (00001, 00003, ...), with 00033 moved first; downscaled to 1024 px on the long side and saved as JPEG by examples/buddha/fetch.sh.",
+  "thumb": "frame_000.jpg"
+}

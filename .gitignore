@@ -11,3 +11,14 @@
 /out/
 /runs/
 .DS_Store
+*.npy
+*.ply
+!docs/static/examples/**/*.ply
+*.bin
+*.ckpt
+*.pkl
+# credentials and private material
+.env
+**/token
+*.tex
+PERFORMANCE_LEDGER*

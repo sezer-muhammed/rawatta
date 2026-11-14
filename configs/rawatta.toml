@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# The RAWATTA setting. `rawatta run --config rawatta` (the default) uses it;
+# the grammar string below is what the name stands for (see GRAMMAR.md).
+
+name = "rawatta"
+display_name = "RAWATTA"
+grammar = "dense@sagepp~L4=sage.pvh16/L15=sage.pvh16"
+description = """
+Every global attention layer stays dense (all keys of all frames) and runs on \
+the quantised SageAttention2++ kernel: INT8 QK^T with per-block scales and \
+FP8 E4M3 P.V with FP16 accumulation per 64-key block. Blocks 4 and 15, the two \
+layers the calibration check flags, get 16-bit P.V (FP16 P and V, FP16 block \
+accumulation). Linear layers stay bf16. Training-free; no layer is skipped \
+or merged."""
+min_compute_capability = "8.9"
+paper_reference = "Sec. 4.2 (Numeric format) and Sec. 4.4 (Calibration check and search, paragraph Precision); supplementary material, section Configuration names (table: paper name to engine configuration)."

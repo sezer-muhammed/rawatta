@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+"""Test stand-in for `docker` (no Docker, no GPU, no weights). Used only by examples/tests/run_tests.sh.
+
+It understands the `docker run` options the example scripts use and plays the rawatta image as
+docker/Dockerfile builds it: ENTRYPOINT rawatta, RAWATTA_WEIGHTS=/weights/vggt_omega_1b_512.safetensors,
+nothing else visible inside the container but the -v mounts. Paths in the rawatta arguments are mapped back
+through the mounts and tests/fake_rawatta runs with them, so the outputs land where a real run would put them.
+Like the real container it fails when the weights file the image looks for is not mounted, when an input is
+not mounted, or when the output folder is mounted read-only.
+
+Every call is appended as one JSON line to $FAKE_DOCKER_LOG (if set), for the tests to inspect.
+"""
+
+import json
+import os
+import subprocess
+import sys
+
+IMAGE_ENV = {"RAWATTA_WEIGHTS": "/weights/vggt_omega_1b_512.safetensors"}
+ENTRYPOINT = "rawatta"
+FAKE_RAWATTA = os.path.join(os.path.dirname(os.path.realpath(__file__)), "fake_rawatta")
+WITH_VALUE = {"--gpus", "--user", "-u", "-e", "--env", "-v", "--volume", "--entrypoint", "-w", "--workdir",
+              "--name", "--network"}
+
+
+def fail(msg, code=125):
+    sys.stderr.write("fake_docker: %s\n" % msg)
+    sys.exit(code)
+
+
+def parse_run(argv):
+    o = {"argv": argv, "rm": False, "gpus": None, "user": None, "env": {}, "mounts": [], "entrypoint": None,
+         "workdir": None}
+    i = 0
+    while i < len(argv) and argv[i].startswith("-"):
+        a = argv[i]
+        name, eq, inline = a.partition("=")
+        if name == "--rm":
+            o["rm"] = True
+            i += 1
+            continue
+        if name not in WITH_VALUE:
+            fail("unknown docker run option %s" % a)
+        if eq:
+            v = inline
+            i += 1
+        else:
+            if i + 1 >= len(argv):
+                fail("%s needs a value" % a)
+            v = argv[i + 1]
+            i += 2
+        if name == "--gpus":
+            o["gpus"] = v
+        elif name in ("--user", "-u"):
+            o["user"] = v
+        elif name in ("-e", "--env"):
+            k, _, val = v.partition("=")
+            o["env"][k] = val
+        elif name in ("-v", "--volume"):
+            parts = v.split(":")
+            if len(parts) not in (2, 3) or not parts[0].startswith("/") or not parts[1].startswith("/"):
+                fail("bad volume %r (want /host:/container[:ro])" % v)
+            o["mounts"].append([parts[0], parts[1], len(parts) == 3 and parts[2] == "ro"])
+        elif name == "--entrypoint":
+            o["entrypoint"] = v
+        elif name in ("-w", "--workdir"):
+            o["workdir"] = v
+    if i >= len(argv):
+        fail("no image given")
+    o["image"] = argv[i]
+    o["args"] = argv[i + 1:]
+    return o
+
+
+def to_host(path, mounts):
+    """(host path, read_only) of a container path, or (None, None) when no mount covers it."""
+    best = None
+    for host, ctr, ro in mounts:
+        if path == ctr or path.startswith(ctr.rstrip("/") + "/"):
+            if best is None or len(ctr) > len(best[1]):
+                best = (host, ctr, ro)
+    if best is None:
+        return None, None
+    host, ctr, ro = best
+    return host + path[len(ctr):], ro
+
+
+def main():
+    argv = sys.argv[1:]
+    if not argv or argv[0] != "run":
+        fail("only `docker run` is supported")
+    o = parse_run(argv[1:])
+    log = os.environ.get("FAKE_DOCKER_LOG")
+    if log:
+        with open(log, "a") as f:
+            f.write(json.dumps(o) + "\n")
+    if (o["entrypoint"] or ENTRYPOINT) != ENTRYPOINT:
+        fail("this image's entrypoint is rawatta; --entrypoint %s is not in the image" % o["entrypoint"], 127)
+    env = dict(IMAGE_ENV, **o["env"])
+    args = list(o["args"])
+    if args[:1] == ["run"]:
+        w, _ = to_host(env["RAWATTA_WEIGHTS"], o["mounts"])
+        if w is None or not os.path.isfile(w):
+            fail("rawatta: VGGT-Omega weights not found at %s (inside the container)" % env["RAWATTA_WEIGHTS"], 1)
+        mapped = []
+        for k, a in enumerate(args):
+            prev = args[k - 1] if k else ""
+            if prev in ("--images", "--video", "--out", "--weights"):
+                h, ro = to_host(a, o["mounts"])
+                if h is None or (prev != "--out" and not os.path.exists(h)):
+                    fail("rawatta: %s %s: no such file or directory (inside the container)" % (prev, a), 1)
+                if prev == "--out" and ro:
+                    fail("rawatta: %s: read-only file system" % a, 1)
+                a = h
+            elif a.startswith("/"):
+                fail("rawatta: argument %s is a path no mount provides" % a, 1)
+            mapped.append(a)
+        args = mapped + ["--weights", w]
+    return subprocess.call([sys.executable, FAKE_RAWATTA] + args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

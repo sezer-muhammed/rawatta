@@ -1,0 +1,14 @@
+{
+  "id": "korno-rock",
+  "title": "Korno climbing rock",
+  "kind": "outdoor",
+  "fetched_photos": 32,
+  "source_photos": 96,
+  "credit": "Photogrammetry of Korno climbing rock by Zbytovsky, Wikimedia Commons",
+  "licence": "CC0 1.0",
+  "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "source": "https://commons.wikimedia.org/wiki/Category:Photogrammetry_of_Korno_climbing_rock",
+  "author": "Zbytovsky (Wikimedia Commons)",
+  "changes": "The first photos in capture order, downscaled to 1024 px on the long side and saved as JPEG by examples/korno-rock/fetch.sh.",
+  "thumb": "frame_000.jpg"
+}

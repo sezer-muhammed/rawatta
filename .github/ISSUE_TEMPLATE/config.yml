@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Official VGGT-Omega (PyTorch) issues
+    url: https://github.com/facebookresearch/vggt-omega/issues
+    about: Questions about the original model, its training or its PyTorch code belong in the official repository.

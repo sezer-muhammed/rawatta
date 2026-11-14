@@ -1,0 +1,28 @@
+# Allowlist: the image build only sees what docker/Dockerfile copies. Weights, datasets, run
+# outputs, the site and build products never enter the build context.
+*
+!Cargo.toml
+!Cargo.lock
+!crates/
+!configs/
+!tools/
+!examples/
+!docker/check_cuda_libs.py
+!docker/download-weights
+!LICENSE
+!LICENSE-VGGT-OMEGA
+!LICENSE-DINOV3
+!THIRD-PARTY-LICENSES.md
+!NOTICE
+
+# Excluded even inside the allowed folders.
+**/target
+**/.venv
+**/__pycache__
+**/*.pyc
+**/*.pt
+**/*.pth
+**/*.safetensors
+**/*.npz
+**/*.npy
+**/.DS_Store

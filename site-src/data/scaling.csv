@@ -1,0 +1,14 @@
+config,N,median_ms,error,note
+official,2,90.9,,
+official,10,481.9,,
+official,25,1478.9,,
+official,50,3614.5,,
+official,90,8360,,later run after a memory fix; paper Sec. 5.5: at most 90 frames (8.4 s)
+official,100,,OOM,
+exact,2,52.2,,
+exact,10,285.9,,
+exact,25,864.9,,
+exact,50,2241.8,,
+exact,100,6438.5,,
+exact,200,20760.3,,
+exact,250,,OOM,
