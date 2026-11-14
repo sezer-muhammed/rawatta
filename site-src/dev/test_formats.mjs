@@ -63,8 +63,14 @@ test("index.json from examples/python/gallery_index.py", () => {
   assert.match(s.caption, /^4 photos, --config rawatta\. .*Photos: Buddha Dataset/);
 });
 
-test("index.json: the shipped empty index, and unsafe entries", () => {
-  assert.deepEqual(F.parseSceneIndex(json(join(root, "docs/static/examples/index.json"))), []);
+test("index.json: the shipped gallery, and unsafe entries", () => {
+  const shipped = F.parseSceneIndex(json(join(root, "docs/static/examples/index.json")));
+  assert.deepEqual(shipped.map((s) => s.id), ["buddha", "korno-rock"]);
+  for (const s of shipped) {
+    assert.equal(s.synthetic, false);
+    assert.match(s.caption, /predicted by VGGT-Ω .*Forward pass [\d.]+ ms .*Photos: .*Outputs: noncommercial/);
+    assert.match(s.licenceUrl, /^https:\/\/creativecommons\.org\//);
+  }
   assert.deepEqual(F.parseSceneIndex(null), []);
   assert.deepEqual(F.parseSceneIndex([{ id: "a" }]), []);
   const scenes = F.parseSceneIndex({ scenes: [
