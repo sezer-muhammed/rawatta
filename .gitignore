@@ -1,0 +1,13 @@
+/target
+**/__pycache__/
+*.pyc
+.venv/
+# never commit weights, datasets or run outputs
+*.pt
+*.pth
+*.safetensors
+*.npz
+/data/
+/out/
+/runs/
+.DS_Store
