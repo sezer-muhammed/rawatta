@@ -1,0 +1,107 @@
+RAWATTA (Regime-AWare ATTention Approximation)
+Copyright 2026 M. Izzet Sezer and Sevval Belkis Dikkaya
+
+This repository is distributed under two licences:
+
+  - Apache License 2.0 (LICENSE): everything except crates/vggt-omega.
+  - FAIR Noncommercial Research License (LICENSE-VGGT-OMEGA): crates/vggt-omega, a port of
+    Meta's VGGT-Omega architecture. The rawatta binary and the Docker image contain this
+    crate, so they are bound by this licence too, including its noncommercial terms. Its
+    DINOv3 backbone code is also under the DINOv3 License (LICENSE-DINOV3; see below).
+
+The project page text, figures and figure data (docs/, site-src/data/) are under CC BY 4.0,
+except docs/static/examples/: the point clouds and cameras there are outputs of the VGGT-Omega
+weights (FAIR Noncommercial Research License, noncommercial research use only); photos and
+thumbnails keep their own licences (examples/*/SOURCE.md). The page's scripts and styles are
+under Apache-2.0.
+
+
+VGGT-Omega (Meta Platforms, Inc.)
+---------------------------------
+crates/vggt-omega ports the VGGT-Omega model (Wang et al., CVPR 2026;
+https://github.com/facebookresearch/vggt-omega) and loads its released weights. VGGT-Omega is
+made available by Meta under the FAIR Noncommercial Research License; a copy of that agreement,
+including the FAIR Acceptable Use Policy, is in LICENSE-VGGT-OMEGA. We acknowledge the use of
+these Research Materials.
+
+The VGGT-Omega weights are not part of this repository or of its Docker image. Users download
+them from Hugging Face (facebook/VGGT-Omega) after accepting the licence. Outputs and results of
+the weights may be used for noncommercial research only.
+
+DINOv3 (Meta Platforms, Inc.)
+-----------------------------
+The DINOv3 patch embedder, blocks and RoPE in crates/vggt-omega/src/trunk/ (dino.rs, block.rs,
+rope.rs) port code that Meta also distributes under the DINOv3 License: in VGGT-Omega these
+are the backbone files vggt_omega/models/layers/*.py that carry the notice "This software may
+be used and distributed in accordance with the terms of the DINOv3 License Agreement". A copy
+of that agreement is in LICENSE-DINOV3. We acknowledge the use of these DINO Materials.
+
+The official VGGT-Omega source code is not vendored: eval/omega_src.py, the evaluation scripts
+and eval/official/Dockerfile download it at run time at a pinned commit.
+
+
+SageAttention
+-------------
+crates/rawatta-nn/cuda/sage_*.cu and crates/rawatta-nn/src/sage/ are an independent
+implementation of the algorithms of SageAttention, SageAttention2 and SageAttention2++
+(Zhang et al.; arXiv 2410.02367, 2411.10958, 2505.21136). The FP8 P-fragment key permutation
+and the two-level P.V accumulation follow those papers and the reference code at
+https://github.com/thu-ml/SageAttention (Apache License 2.0). No SageAttention source file is
+included.
+
+The +log(count) bias of merged keys follows the proportional attention of ToMe and GPA-VGGT.
+The bf16 attention kernel (crates/rawatta-nn/cuda/attention.cu) was written from the
+FlashAttention-2 paper (Dao, 2023); no FlashAttention code is used.
+
+
+Other upstream code used by the research harnesses
+--------------------------------------------------
+research/ (unsupported) vendors no model code: research/setup.sh clones the pinned repositories
+it needs (GPA-VGGT, sparse-vggt with its vggt, SpargeAttn and Pi3 submodules) at run time; check
+each repository's and model's licence before use. The replacement attention forward in
+research/vggt1b_sched.py and research/v3_generality.py follows the structure of
+Attention.forward in https://github.com/facebookresearch/vggt.
+
+
+Rust dependencies compiled into the rawatta binary
+--------------------------------------------------
+The binary statically links its Rust dependencies (versions pinned in Cargo.lock). Their licences,
+from the crate metadata of the dependency graph of rawatta-cli on Linux x86_64:
+
+  - mozjpeg 0.10 and mozjpeg-sys 2.2 (IJG AND Zlib AND BSD-3-Clause): the mozjpeg / libjpeg-turbo
+    JPEG decoder, built from source. This software is based in part on the work of the
+    Independent JPEG Group.
+  - cudarc 0.19 (MIT OR Apache-2.0): CUDA driver, NVRTC and cuBLASLt bindings; the CUDA libraries
+    themselves are loaded at run time and are not part of the binary.
+  - libloading (ISC); rgb, simd-adler32, strsim, tracing, tracing-attributes, tracing-core,
+    winnow, zmij (MIT); zlib-rs (Zlib); moxcms, pxfm (BSD-3-Clause OR Apache-2.0); byteorder-lite, memchr
+    (Unlicense OR MIT); unicode-ident ((MIT OR Apache-2.0) AND Unicode-3.0).
+  - All other crates (anyhow, clap, image, memmap2, rayon, serde, serde_json, png, flate2,
+    zune-jpeg and their dependencies) are under MIT OR Apache-2.0, or a choice that includes one of
+    them.
+
+Their licence texts are collected in THIRD-PARTY-LICENSES.md (generated from Cargo.lock by
+scripts/third_party_licenses.py), which the Docker image ships in /opt/rawatta/.
+
+
+Docker image
+------------
+The image built from docker/Dockerfile starts from NVIDIA's nvidia/cuda runtime image (CUDA
+runtime, NVRTC, cuBLASLt), which is governed by the NVIDIA Deep Learning Container License
+(/NGC-DL-CONTAINER-LICENSE in the image). The Ubuntu packages it installs (ffmpeg, Python, numpy,
+curl, ...) keep their own licences (/usr/share/doc/*/copyright in the image).
+
+ffmpeg in the image is Ubuntu 24.04's build, licensed GPL-2.0-or-later as built by Ubuntu. Its
+corresponding source is Ubuntu's ffmpeg source package at the version installed in the image
+(`dpkg-query -W ffmpeg` inside it; 7:6.1.1-3ubuntu5 when this was written): get it with
+`apt-get source ffmpeg=<version>` on Ubuntu 24.04 or from
+https://launchpad.net/ubuntu/+source/ffmpeg.
+
+
+Data
+----
+No dataset is redistributed. eval/data/ downloads each dataset from its source; eval/DATASETS.md
+lists their licences, several of which are noncommercial. eval/manifests/ holds frame indices and
+SHA-256 sums only. The example photos (examples/*/) are not stored in the repository; each
+scene's SOURCE.md records its source and licence (Buddha Dataset: CC BY 4.0, Gasparini, Castan
+and Lanthony, AliceVision; Korno climbing rock: CC0 1.0, Zbytovsky, Wikimedia Commons).

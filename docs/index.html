@@ -1,0 +1,398 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: CC-BY-4.0 AND Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAWATTA: Regime-Aware Attention Approximation</title>
+<meta name="description" content="RAWATTA is a training-free method that speeds up the multi-view 3D transformer VGGT-Ω with 8-bit global attention, keeping 16-bit only where a worst-case calibration check requires it; its fast setting also approximates a few context and anchoring layers, guided by the three attention regimes.">
+<meta name="author" content="M. Izzet Sezer, Sevval Belkis Dikkaya">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111317" media="(prefers-color-scheme: dark)">
+<!-- OpenGraph and Twitter cards need absolute URLs; everything the page itself loads uses relative URLs. -->
+<link rel="canonical" href="https://sezer-muhammed.github.io/rawatta/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RAWATTA">
+<meta property="og:title" content="Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware Attention Approximation">
+<meta property="og:description" content="Multi-view global attention is structured, not sparse: layers average over the scene, match points across images, or anchor on the first image. RAWATTA speeds up VGGT-Ω without training: 8-bit global attention, 16-bit only where a worst-case calibration check requires it, and in its fast setting a few context and anchoring layers approximated as their regime allows.">
+<meta property="og:url" content="https://sezer-muhammed.github.io/rawatta/">
+<meta property="og:image" content="https://sezer-muhammed.github.io/rawatta/static/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RAWATTA: the three regimes of global attention in VGGT-Ω, VGGT-1B and π³, and latency against pose accuracy for published accelerators on one GPU.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="RAWATTA: Regime-Aware Attention Approximation">
+<meta name="twitter:description" content="Training-free acceleration of the multi-view 3D transformer VGGT-Ω: 8-bit global attention with a worst-case calibration check, informed by the three regimes of its global attention.">
+<meta name="twitter:image" content="https://sezer-muhammed.github.io/rawatta/static/img/og.png">
+<meta name="twitter:image:alt" content="RAWATTA: the three regimes of global attention and latency against pose accuracy for published accelerators.">
+<link rel="icon" href="static/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="static/css/style.css">
+<!-- three.js is loaded only when the interactive example scrolls into view (and only if example scenes exist).
+     The integrity hashes pin the exact files (Subresource Integrity); recompute them when the version changes:
+     curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  },
+  "integrity": {
+    "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js": "sha384-GY5FqjttLCFRt/McQbyaVdCk2O1IQtOeX8Py6NfD89BIAsIyJFRl4UgSXrk2vXAk",
+    "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js": "sha384-aJoe4qqS/DgF2jh9njAuvA6QIveJYoCuYOfYjdFY8P3eawzmc9bEQ40jq2TvOyuP"
+  }
+}
+</script>
+<script type="module" src="static/js/main.js"></script>
+</head>
+<body>
+<a class="skip" href="#tldr">Skip to content</a>
+
+<header class="hero wrap">
+  <p class="eyebrow">RAWATTA · Regime-AWare ATTention Approximation</p>
+  <h1>Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware Attention Approximation</h1>
+  <p class="authors">
+    <span>M. Izzet Sezer<sup>1</sup></span>
+    <span>Sevval Belkis Dikkaya<sup>2</sup></span>
+  </p>
+  <p class="affils">
+    <span><sup>1</sup>Independent Researcher</span>
+    <span><sup>2</sup>Carnegie Mellon University</span>
+  </p>
+  <ul class="links">
+    <li>
+      <a class="btn" data-arxiv="abs" aria-disabled="true" title="The arXiv link will appear here once the paper is announced">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>
+        <span>Paper (arXiv)</span> <span class="soon">coming soon</span>
+      </a>
+    </li>
+    <li>
+      <a class="btn" data-arxiv="pdf" aria-disabled="true" title="The PDF link will appear here once the paper is announced">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+        <span>PDF</span> <span class="soon">coming soon</span>
+      </a>
+    </li>
+    <li>
+      <a class="btn" href="https://github.com/sezer-muhammed/rawatta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 7-5 5 5 5"/><path d="m16 7 5 5-5 5"/><path d="m13.5 4-3 16"/></svg>
+        <span>Code</span>
+      </a>
+    </li>
+    <li>
+      <a class="btn" href="#bibtex">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11H6V7h4v4zm0 0c0 3-1.5 5-4 6"/><path d="M18 11h-4V7h4v4zm0 0c0 3-1.5 5-4 6"/></svg>
+        <span>BibTeX</span>
+      </a>
+    </li>
+  </ul>
+</header>
+
+<main class="wrap">
+
+<section id="tldr" aria-label="TL;DR">
+  <div class="tldr narrow">
+    <p><strong>TL;DR.</strong> Multi-view global attention is structured, not sparse: layers average over the scene, match points across images, or anchor on the first image.</p>
+  </div>
+  <ul class="stats narrow" aria-label="Key numbers">
+    <li><b>2.08×</b><span>faster than the released VGGT-Ω code at 50 images on an RTX 4070 SUPER: 1.61× from our CUDA engine, 1.29× from RAWATTA itself (Tab. 1, 2)</span></li>
+    <li><b>about 1 point</b><span>of pose accuracy (AUC@3) lost at most, on any of six datasets, on 10-frame sequences (RAWATTA vs released code: −1.03; Tab. 4)</span></li>
+    <li><b>200 images</b><span>in 12.5 s on a 12 GB GPU, 1.66× faster than the exact engine; the released code runs out of memory at 100 (Tab. 2, Sec. 5.5)</span></li>
+  </ul>
+</section>
+
+<section id="teaser" aria-label="Overview figure">
+  <figure>
+    <p class="scroll-hint" aria-hidden="true">Swipe the figure sideways to see panels (b) and (c) and the legend.</p>
+    <a class="fig-frame wide" href="static/img/teaser.svg">
+      <picture>
+        <source srcset="static/img/teaser.svg" type="image/svg+xml">
+        <img src="static/img/teaser.png" width="1518" height="605" loading="eager" decoding="async"
+             alt="Left: regime of every global layer in VGGT-Ω, VGGT-1B and π³ (context, matching, anchoring, late context, register-only). Middle and right: latency at 50 frames against worst-dataset change in pose AUC@3 and AUC@30 for RAWATTA, RAWATTA-Fast, the exact engine, other schedules, uniform low-precision kernels and published accelerators on one RTX 4070 SUPER.">
+      </picture>
+    </a>
+    <figcaption>
+      <b>Figure 1 of the paper.</b> <b>(a)</b> Global attention in multi-view transformers follows three regimes (10 frames, i.e. images, 7 datasets); VGGT-Ω attends strongly to the first (reference) frame, VGGT-1B weakly, and π³, which has no reference frame, not at all.
+      <b>(b, c)</b> On one RTX 4070 SUPER: latency at 50 frames against the change in pose AUC@3 (b) and AUC@30 (c), measured on 10-frame sequences, on the worst of six datasets, relative to Official VGGT-Ω. Filled: RAWATTA settings; hollow purple: other schedules; grey: uniform low-precision kernels; green/gold: published accelerators; brown: the AVGGT/GPA-VGGT layer split in our engine. Accelerators that merge or drop keys in matching layers lose by far the most accuracy.
+      <span class="zoom-hint">Select a figure to open it at full size; on a phone, swipe wide figures sideways.</span>
+    </figcaption>
+  </figure>
+</section>
+
+<section id="abstract" aria-labelledby="h-abstract">
+  <div class="narrow">
+    <h2 id="h-abstract"><a class="anchor" href="#abstract">Abstract</a></h2>
+    <p>Multi-view 3D transformers such as VGGT-Ω reconstruct a scene from a set of unposed images in a single forward pass, predicting camera poses, depth and 3D points, but the cost of their global attention grows quadratically with the number of images. Accelerators borrowed from large language models assume that each token attends to only a few others; on these models they lose accuracy or gain little speed. We study the global attention of three multi-view transformers on seven datasets and find that every layer plays one of three roles: it averages over the whole scene, matches points across many images, or anchors on the first image, whose coordinates the outputs use. Building on this analysis, we propose Regime-AWare ATTention Approximation (RAWATTA), a training-free method that runs attention in 8-bit precision and keeps 16-bit precision only in the layers where a worst-case calibration check requires it. Its fast setting, RAWATTA-Fast, also approximates attention in a few averaging and anchoring layers, while matching layers and the first image keep all their keys. On a 12&#8239;GB GPU at 50 images, RAWATTA runs VGGT-Ω 2.1× faster than the released code, mostly through our CUDA engine, and loses at most about one point of pose accuracy (AUC@3) on any dataset; RAWATTA-Fast is slightly faster and less accurate. Both fit 200 images, where the released code runs out of memory at 100.</p>
+    <p class="small muted">Of the 2.08× at 50 images on the RTX 4070 SUPER, 1.61× comes from the CUDA engine and 1.29× from RAWATTA itself; at 200 images RAWATTA alone gives 1.66× (RAWATTA-Fast 1.97×) over the exact engine (Tab. 1, 2 of the paper). The accuracy changes are measured on 10-frame sequences.</p>
+  </div>
+</section>
+
+<section id="regimes" aria-labelledby="h-regimes">
+  <h2 id="h-regimes"><a class="anchor" href="#regimes">The three regimes</a></h2>
+  <p class="narrow" style="margin-left:0">VGGT-Ω has 24 blocks; in each global layer every image patch attends to every patch of every image. We recorded where this attention goes during one exact forward pass of VGGT-Ω, VGGT-1B and π³ on seven datasets at 10 and 50 frames and, where memory allows, 200. Every global layer looks at other frames about as much as it can; what differs is <em>how selectively</em>. The answer sorts each layer into one of three regimes, and each regime tolerates a different approximation.</p>
+  <figure>
+    <p class="scroll-hint" aria-hidden="true">Swipe the figure sideways to see all 24 blocks.</p>
+    <a class="fig-frame wide" href="static/img/anatomy.svg">
+      <picture>
+        <source srcset="static/img/anatomy.svg" type="image/svg+xml">
+        <img src="static/img/anatomy.png" width="1471" height="627" loading="lazy" decoding="async"
+             alt="Top: normalised attention entropy and attention mass on frame 0 for each of the 24 global blocks of VGGT-Ω at 10, 50 and 200 frames, over coloured regime bands. Bottom: heat map of the change in AUC@3 when a single block uses frame attention or merging of its keys; large drops appear in blocks 10 to 23 under frame attention and in the matching blocks under merging.">
+      </picture>
+    </a>
+    <figcaption><b>Figure 2 of the paper: regimes and tolerance in VGGT-Ω.</b> Top: normalised entropy (black) and attention mass on frame 0 (red) per global block at 10, 50 and 200 frames; background: regime at N = 10. Bottom: ΔAUC@3 when one block alone uses frame attention or merging (ETH3D and 7-Scenes); numbers shown for drops of at least 1.5. Grey “R”/“–” columns: register-only blocks, never changed.</figcaption>
+  </figure>
+
+  <div class="cards">
+    <article class="card ctx">
+      <h3>Context: averages over the scene</h3>
+      <p class="blocks">Blocks 0–8, except register-only 2 and 6; late context 17, 18, 22</p>
+      <span class="verdict ok">Tolerates merging</span>
+      <p>In blocks 0–8 (entropy 0.81–0.98), each query spreads its attention almost evenly over all frames, and frame 0 gets only its uniform share (1.0–1.1×). These layers compute scene-wide averages, not correspondences. Blocks 17, 18 and 22 are diffuse again.</p>
+      <p>An average changes little when each image is summarised by fewer keys, so we merge every 4×4 group of patch keys into their mean (a non-reference frame then contributes 65 keys instead of 689). In the earliest context layers each image may even attend only to itself (frame attention); the late context layers tolerate merging but not frame attention.</p>
+    </article>
+    <article class="card match">
+      <h3>Matching: matches points across images</h3>
+      <p class="blocks">Blocks 10–16, except register-only 14 (15 and 16 also anchor)</p>
+      <span class="verdict no">Must stay dense</span>
+      <p>Attention is concentrated (mean entropy 0.59–0.78; down to 0.25 for the most selective head), yet the most-attended frame receives only 0.26–0.48 of it: each query collects evidence from many frames.</p>
+      <p>Dropping or merging keys here destroys the correspondences: merging a single block in 10–16 costs up to 9 AUC@3 (Fig. 2), and applying RAWATTA-Fast's operators to matching blocks instead loses 85.08 worst-dataset AUC@3 (Tab. 5).</p>
+    </article>
+    <article class="card anchor">
+      <h3>Anchoring: anchors on the first image</h3>
+      <p class="blocks">Blocks 19, 21, 23; partly 15, 16</p>
+      <span class="verdict cond">Merging only if frame 0 keeps all its keys</span>
+      <p>52–62% of every query's attention goes to frame 0, 5–6× its uniform share at 10 frames, and 42–48% still does in blocks 19 and 21 at 200 frames. The target is a whole frame, the one whose coordinates the outputs use, and the effect is tied to the first position.</p>
+      <p>Merging is safe if frame 0 stays complete. Merging frame 0 together with the others in the single anchoring block 19 costs 2.7 AUC@3 on ETH3D, four times the cost of all RAWATTA-Fast approximations together.</p>
+    </article>
+  </div>
+  <p class="muted small">Attention is not sparse: in no block of any of the three models does the heaviest frame hold more than 0.63 of the mass, and the effective number of attended keys is 9–83% of all keys. This is why block-sparse attention finds little to skip on VGGT-Ω (SparseVGGT: 7–8% effective sparsity, 1.17× faster), and why accelerators that merge or drop keys in matching layers lose accuracy. Numbers: Sec. 3 of the paper.</p>
+</section>
+
+<section id="method" aria-labelledby="h-method">
+  <h2 id="h-method"><a class="anchor" href="#method">Method</a></h2>
+  <p>RAWATTA is training-free: every operator keeps every query and leaves the weights unchanged. A configuration is accepted only if the <em>worst</em> of five calibration datasets stays within a fixed accuracy budget, because errors of single layers do not simply add up and a loss on one dataset must not hide behind gains on others.</p>
+  <ol class="steps">
+    <li>
+      <h3>8-bit global attention</h3>
+      <p>Global attention uses INT8 QK<sup>⊤</sup> with key smoothing and per-block scales, following SageAttention, and FP8 (E4M3) P·V with FP16 accumulation in each 64-key block, folded into FP32 (SageAttention2++). Per global layer at 50 frames this takes 23.1&#8239;ms, against 50.0&#8239;ms for exact bf16 attention. VGGT-Ω's per-frame blocks keep bf16 attention.</p>
+    </li>
+    <li>
+      <h3>16-bit only where the worst-case calibration check requires it</h3>
+      <p>Which layers need more precision is the one choice the attention statistics do not predict, so the check decides. Starting from FP8 everywhere, layers get 16-bit P·V (34.2&#8239;ms per layer) in order of their single-layer gain until the worst calibration dataset is within −0.5 AUC@3 and −0.3 AUC@30. This stops after two layers, block 15 (matching and anchoring) and block 4 (context), and gives <strong>RAWATTA</strong>.</p>
+    </li>
+    <li>
+      <h3>RAWATTA-Fast also approximates a few context and anchoring layers</h3>
+      <p>A greedy search under the same check (budget −1 AUC@3 and −0.5 AUC@30, 49 configurations) may try every non-register layer and both cheaper operators. It accepts frame attention on blocks 0, 4, 5 and 4×4 merging on blocks 3 and 19, all of them context or anchoring layers; matching layers and frame 0 keep all their keys. Merged keys carry a +log&#8239;c bias (proportional attention, as in ToMe and GPA-VGGT), which is exact for a uniform attention row. In the engine, frame-attention layers run on the bf16 kernel and merged layers on the 8-bit kernel. The schedule was fixed on one frame sample before any evaluation run: <strong>RAWATTA-Fast</strong>.</p>
+    </li>
+    <li>
+      <h3>A native CUDA engine</h3>
+      <p>PyTorch SDPA falls back to slower kernels when given the merge bias, and FlexAttention cannot take INT8/FP8 operands, so the model runs in a native engine: cuBLASLt bf16 matrix multiplications, our own attention kernels (INT8/FP8, 16-bit, merged, frame) and a static memory planner. With exact bf16 attention we call it the <strong>exact engine</strong>; comparing RAWATTA with the exact engine measures the method alone, and the exact engine against the released code measures the engine alone.</p>
+    </li>
+  </ol>
+  <p class="muted small">The regimes explain which operator each layer tolerates (Tab. 5 of the paper); the calibration check, not the regimes, picks the named settings. Sec. 4 of the paper.</p>
+</section>
+
+<section id="results" aria-labelledby="h-results">
+  <h2 id="h-results"><a class="anchor" href="#results">Results</a></h2>
+  <p class="lead">At 50 images on a 12&#8239;GB RTX 4070 SUPER, RAWATTA is 2.08× faster than the released code: 1.61× from our CUDA engine and 1.29× from RAWATTA itself. At 200 images, RAWATTA alone is 1.66× faster than the exact engine, and RAWATTA-Fast 1.97×.</p>
+
+  <ol class="chain" aria-label="Latency at 50 images, step by step (Tab. 2)">
+    <li class="base"><span class="what">Official VGGT-Ω (released PyTorch code)</span><span class="ms">3605 ms</span><span class="step">baseline</span></li>
+    <li><span class="what">Exact engine (our CUDA engine, exact bf16 attention)</span><span class="ms">2237 ms</span><span class="step">engine: 1.61×</span></li>
+    <li><span class="what">RAWATTA (8-bit attention, 16-bit on two layers)</span><span class="ms">1734 ms</span><span class="step">precision: 1.29×</span></li>
+    <li><span class="what">RAWATTA-Fast (+ approximated context and anchoring layers)</span><span class="ms">1616 ms</span><span class="step">schedule: 1.07×</span></li>
+  </ol>
+  <p class="small muted">At 200 images the exact engine takes 20.74&#8239;s, RAWATTA 12.51&#8239;s (1.66×) and RAWATTA-Fast 10.56&#8239;s (a further 1.19×, 1.97× in total), because global attention then takes 76% of the exact engine's time. Official VGGT-Ω runs out of memory at that length. Tab. 2 of the paper.</p>
+
+  <h3 id="main-table">Operating points on VGGT-Ω</h3>
+  <div class="table-wrap" role="region" aria-labelledby="main-table" tabindex="0">
+    <table aria-describedby="main-table-cap">
+      <thead>
+        <tr class="group">
+          <th scope="col"></th>
+          <th scope="colgroup" colspan="2">N = 50</th>
+          <th scope="colgroup" colspan="2">N = 200</th>
+          <th scope="colgroup" colspan="3">worst-dataset ΔAUC (N = 10)</th>
+          <th scope="col"></th>
+        </tr>
+        <tr>
+          <th scope="col">Setting</th>
+          <th scope="col">ms</th>
+          <th scope="col">× official</th>
+          <th scope="col">s</th>
+          <th scope="col">× exact</th>
+          <th scope="col">Δ<sub>3</sub> vs exact</th>
+          <th scope="col">Δ<sub>30</sub> vs exact</th>
+          <th scope="col">Δ<sub>3</sub> vs Official</th>
+          <th scope="col">cal.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Official VGGT-Ω</td><td>3605</td><td>1.00</td><td class="oom">OOM</td><td>–</td><td>–</td><td>–</td><td>0</td><td>–</td></tr>
+        <tr><td>Exact engine</td><td>2237</td><td>1.61</td><td>20.74</td><td>1.00</td><td>0</td><td>0</td><td>−0.86</td><td>–</td></tr>
+        <tr class="hi"><td>RAWATTA</td><td>1734</td><td>2.08</td><td>12.51</td><td>1.66</td><td>−0.51 <span class="pm">±0.11</span></td><td>−0.24</td><td>−1.03</td><td>3/3</td></tr>
+        <tr class="hi"><td>RAWATTA-Fast</td><td>1616</td><td>2.23</td><td>10.56</td><td>1.97</td><td>−0.80 <span class="pm">±0.17</span></td><td>−1.20</td><td>−1.14</td><td>2/3</td></tr>
+        <tr class="sep"><td class="sub">threshold schedule</td><td>1544</td><td>2.33</td><td>9.39</td><td>2.21</td><td>−0.99 <span class="pm">±0.54</span></td><td>−1.23</td><td>−1.16</td><td>0/3</td></tr>
+        <tr><td class="sub">greedy search, budget −2</td><td>1547</td><td>2.33</td><td>9.51</td><td>2.18</td><td>−1.59 <span class="pm">±0.50</span></td><td>−0.75</td><td>−1.87</td><td>–</td></tr>
+        <tr><td class="sub">sensitivity-only greedy</td><td>1558</td><td>2.31</td><td>9.67</td><td>2.14</td><td>−0.91 <span class="pm">±0.25</span></td><td>−0.21</td><td>–</td><td>2/3</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="scroll-hint" aria-hidden="true">Swipe the table sideways to see all columns.</p>
+  <p class="table-cap" id="main-table-cap">Tab. 1 of the paper (Official row: Tab. 1 caption and Tab. 4). Latency: full forward pass (trunk, camera and dense heads), one RTX 4070 SUPER (12&#8239;GB, CUDA 12.8), Mip-NeRF 360 kitchen at 512×336; exact engine and RAWATTA: mean of three timing sessions, RAWATTA-Fast: the 1616.4&#8239;ms session in which the rivals were timed (three-session mean 1611.8&#8239;ms; Supp. Tab. 23); × official: against Official VGGT-Ω at 3605&#8239;ms (out of memory at N ≥ 100); × exact: against the exact engine.
+        Accuracy: change in pose AUC@3 / AUC@30 on the worst of six evaluation datasets (ETH3D, CO3Dv2, RealEstate10K, 7-Scenes, NRGBD, TUM-dynamic) at N = 10, mean ± std of the per-seed worst over three frame-sampling seeds; differences below about 0.5 AUC@3 are seed noise. cal.: calibration samples (of three) passing the check.
+        Rows below the line are other schedules, not named settings; the sensitivity-only greedy search is post hoc and at 100/200 frames loses 3.42/2.10 on RE10K, against a worst-dataset loss of 1.20/1.03 for RAWATTA-Fast.</p>
+  <p class="table-note">Against the released code, 0.86 of the worst-dataset AUC@3 change already comes from the exact engine. “Exact” means no attention approximation, not bit-identical to the released code: the engine runs bf16 weights and bf16 attention, while the released code keeps fp32 weights under bf16 autocast. The paper does not isolate the cause of the gap; the two differ only on ETH3D (0.8 AUC@3, Sec. 4.5). With 50, 100 and 200 frames per sequence (five datasets; ETH3D is too short), RAWATTA stays within 0.32 and RAWATTA-Fast within 1.20 AUC@3 of the exact engine on the worst dataset. Depth accuracy (δ<sub>1.25</sub> and AbsRel) stays within 0.02 points and 0.0002 of Official for both settings. Sec. 5 of the paper.</p>
+
+  <h3 id="rivals-table">Published accelerators on the same GPU</h3>
+  <div class="table-wrap" role="region" aria-labelledby="rivals-table" tabindex="0">
+    <table aria-describedby="rivals-table-cap">
+      <thead>
+        <tr>
+          <th scope="col">Method</th>
+          <th scope="col">s (N = 50)</th>
+          <th scope="col">×</th>
+          <th scope="col">worst Δ<sub>3</sub></th>
+          <th scope="col">worst Δ<sub>30</sub></th>
+          <th scope="col">s (N = 200)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Official VGGT-Ω</td><td>3.61</td><td>1.00</td><td>0</td><td>0</td><td class="oom">OOM</td></tr>
+        <tr><td>SparseVGGT<sup>†</sup>, default</td><td>3.08</td><td>1.17</td><td>−1.04 <span class="pm">±0.26</span></td><td>−0.51</td><td class="oom">OOM</td></tr>
+        <tr><td class="sub">CDF 0.90</td><td>3.06</td><td>1.18</td><td>−0.74<sup>*</sup></td><td>−0.64</td><td class="oom">OOM</td></tr>
+        <tr><td>GPA-VGGT<sup>†</sup>, default</td><td>2.77</td><td>1.30</td><td>−3.14 <span class="pm">±1.08</span></td><td>−0.89</td><td class="oom">OOM</td></tr>
+        <tr><td class="sub">r = 0.5 on 9–23</td><td>2.85</td><td>1.27</td><td>−4.65<sup>*</sup></td><td>−1.92</td><td class="oom">OOM</td></tr>
+        <tr><td>FastVGGT<sup>†</sup></td><td>2.81</td><td>1.28</td><td>−21.19<sup>*</sup></td><td>−9.17</td><td class="oom">OOM</td></tr>
+        <tr><td>SageAttention2<sup>‡</sup>, uniform</td><td>1.80</td><td>2.00</td><td>−2.47<sup>*</sup></td><td>−1.10</td><td>13.57</td></tr>
+        <tr><td>frame 0–8, merge<sub>2</sub> 10–23<sup>‡</sup></td><td>1.36</td><td>2.65</td><td>−37.89 <span class="pm">±0.00</span></td><td>−28.41</td><td>6.63</td></tr>
+        <tr><td class="sub">frame 0–8 only</td><td>1.56</td><td>2.31</td><td>−2.97 <span class="pm">±0.31</span></td><td>−0.82</td><td>9.72</td></tr>
+        <tr><td>GPA-style merge<sup>‡</sup>, RAWATTA-Fast's layers</td><td>1.65</td><td>2.18</td><td>−1.03 <span class="pm">±0.00</span></td><td>−1.25</td><td>11.13</td></tr>
+        <tr class="sep"><td>Exact engine</td><td>2.24</td><td>1.61</td><td>−0.86 <span class="pm">±0.11</span></td><td>−0.30</td><td>20.74</td></tr>
+        <tr class="hi"><td>RAWATTA</td><td>1.73</td><td>2.08</td><td>−1.03 <span class="pm">±0.00</span></td><td>−0.39</td><td>12.51</td></tr>
+        <tr class="hi"><td>RAWATTA-Fast</td><td>1.62</td><td>2.23</td><td>−1.14 <span class="pm">±0.00</span></td><td>−1.13</td><td>10.56</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="scroll-hint" aria-hidden="true">Swipe the table sideways to see all columns.</p>
+  <p class="table-cap" id="rivals-table-cap">Tab. 4 of the paper: accelerators on VGGT-Ω, same RTX 4070 SUPER, one timing session (exact engine, RAWATTA: three, 2237 ± 2, 1734 ± 1&#8239;ms). Worst ΔAUC against Official over six datasets as in Tab. 1, or seed 0 (<sup>*</sup>).
+        <sup>†</sup>Released code ported onto VGGT-Ω, poses only; <sup>‡</sup>in our engine at RAWATTA's precision. ±0.00: ETH3D (one frame set) worst on every seed.</p>
+  <p class="table-note">SparseVGGT skips little: it matches RAWATTA's worst-dataset accuracy (−1.04 vs −1.03) at 1.77× the latency. GPA-VGGT and FastVGGT merge or drop keys in the matching layers and lose 3.1 and 21.2 AUC@3; RAWATTA-Fast is 1.71× faster than GPA-VGGT and loses 2.0 points less, partly through our engine. Sec. 5.4 of the paper.</p>
+</section>
+
+<section id="scaling" aria-labelledby="h-scaling">
+  <h2 id="h-scaling"><a class="anchor" href="#scaling">Scaling to more images</a></h2>
+  <figure>
+    <a class="fig-frame small" href="static/img/scaling.svg">
+      <picture>
+        <source srcset="static/img/scaling.svg" type="image/svg+xml">
+        <img src="static/img/scaling.png" width="1005" height="675" loading="lazy" decoding="async"
+             alt="Latency against number of frames on log-log axes. Left, RTX 4070 SUPER: Official VGGT-Ω stops at 90 frames and runs out of memory at 100; the exact engine, RAWATTA and RAWATTA-Fast reach 200 frames, RAWATTA and RAWATTA-Fast fastest. Right, RTX PRO 6000: Official and the exact engine are close at 200 frames, RAWATTA is clearly faster.">
+      </picture>
+    </a>
+    <figcaption><b>Supplementary Fig. 6: latency vs frames</b> (kitchen, 512×336, full forward, exclusive GPU). (a) Official VGGT-Ω runs out of memory at 100 frames on 12&#8239;GB. (b) On Blackwell, the exact engine alone is barely faster than Official at 200 frames; the gain comes from the method.</figcaption>
+  </figure>
+  <div class="narrow" style="margin-left:0">
+    <p><strong>12&#8239;GB, RTX 4070 SUPER.</strong> Official VGGT-Ω runs at most 90 frames (8.4&#8239;s) and runs out of memory from 100 frames on. RAWATTA and RAWATTA-Fast run 200 frames in 12.5&#8239;s and 10.6&#8239;s at a 9.7&#8239;GiB peak. At 200 frames, the single-pass exact engine scores 32.8 AUC@3 on 7-Scenes against 28.4 for chunked VGGT-Ω; the memory gain is the engine's. Sec. 5.5 of the paper.</p>
+    <p><strong>96&#8239;GB, RTX PRO 6000 Blackwell</strong> (card exclusive, one fresh process per cell). RAWATTA is 1.86× and 1.76× faster than Official at 50 and 200 frames, the exact engine only 1.41× and 1.05×: on this card the gain is the method's. Our kernels ran as compute_89 PTX compiled by the driver, with no Blackwell-specific tuning. In single-pass probes with a 5-minute cap, Official reached 1390 frames, the exact engine 1310 and RAWATTA 1830. <strong>At 500 frames GPA-VGGT wins:</strong> as released (PyTorch) it takes 17.4&#8239;s at 32.20 AUC@3, against 22.9&#8239;s and 31.88 for RAWATTA, 34.7&#8239;s and 31.98 for SparseVGGT, and 39.3&#8239;s and 31.97 for Official (7-Scenes-long). Supplementary Sec. N and Tab. 18.</p>
+  </div>
+</section>
+
+<section id="interactive" aria-labelledby="h-interactive" hidden>
+  <h2 id="h-interactive"><a class="anchor" href="#interactive">Interactive example</a></h2>
+  <p>Point cloud and cameras reconstructed by the <code>rawatta</code> command-line tool. Frame 0, whose coordinates the outputs use, is drawn in orange. Drag to orbit, scroll or pinch to zoom, right-drag or two-finger drag to pan.</p>
+  <div class="viewer" id="viewer">
+    <div class="viewer-canvas" id="viewer-canvas" role="img" aria-label="Interactive 3D point cloud with camera frusta">
+      <div class="viewer-status" id="viewer-status" role="status" aria-live="polite">The viewer loads when you scroll here.</div>
+    </div>
+    <div class="viewer-bar">
+      <div class="scenes" id="viewer-scenes" role="group" aria-label="Scene"></div>
+      <label><input type="checkbox" id="viewer-cams" checked> cameras</label>
+      <label>point size <input type="range" id="viewer-size" min="0.5" max="5" step="0.25" value="1.5"></label>
+      <button class="chip" id="viewer-reset" type="button">Reset view</button>
+    </div>
+  </div>
+  <p class="viewer-caption small muted" id="viewer-caption"></p>
+</section>
+
+<section id="use" aria-labelledby="h-use">
+  <h2 id="h-use"><a class="anchor" href="#use">Use it</a></h2>
+  <p>RAWATTA ships as a single <code>rawatta</code> binary (Rust + CUDA) in a Docker image. CUDA kernels are compiled at run time with NVRTC, so the host needs only Docker and an NVIDIA driver: no CUDA toolkit, Rust or Python. The <code>rawatta</code> binary and the image contain the VGGT-Ω port and are bound by the FAIR Noncommercial Research License (research use only).</p>
+  <ul class="req">
+    <li><b>RAWATTA, RAWATTA-Fast</b>Compute capability 8.9 or newer (sm_89+: Ada, Hopper, Blackwell, e.g. RTX 40xx/50xx, L4, L40, H100), for the FP8 tensor-core instructions. Run on Ada (RTX 4070 SUPER) and, in the paper, Blackwell sm_120 (RTX PRO 6000); Hopper (sm_90) and sm_100 are built and ptxas-checked but not yet run.</li>
+    <li><b>Exact engine</b>Compute capability 8.0 or newer (sm_80+, e.g. A100, RTX 30xx, which cannot run RAWATTA). Built and bit-checked for sm_80+, not yet run on Ampere hardware.</li>
+    <li><b>Host</b>Linux x86_64, Docker and an NVIDIA driver with CUDA 12.8 or newer (Docker reaches the GPU through the NVIDIA Container Toolkit). <code>rawatta info</code> reports which settings your GPU can run.</li>
+  </ul>
+  <p class="note">The image <code>ghcr.io/sezer-muhammed/rawatta</code> is published at v0.1.0; pulling it before then fails with “error from registry: denied”. Until then, build it in a clone of the repository with <code>docker build -f docker/Dockerfile -t rawatta .</code> (needs BuildKit, the default since Docker 23) and write <code>rawatta</code> in place of <code>ghcr.io/sezer-muhammed/rawatta:latest</code> in the commands below, or tag the build <code>-t ghcr.io/sezer-muhammed/rawatta:latest</code> to use them unchanged.</p>
+  <h3>1. Request access to the VGGT-Ω weights</h3>
+  <p>The VGGT-Ω weights are gated under the FAIR Noncommercial Research License. Sign in to Hugging Face and request access on the <a href="https://huggingface.co/facebook/VGGT-Omega">VGGT-Ω model page</a>. Meta reviews requests by hand, which can take a while; until you are approved, the download is refused (HTTP 401/403). Then create a Read token (a fine-grained token needs “Read access to contents of all public gated repos you can access”). Save it with <code>hf auth login</code> (from <code>pip install -U huggingface_hub</code>; older versions: <code>huggingface-cli login</code>), which writes <code>~/.cache/huggingface/token</code>, or, with no Python, save it there by hand without putting it on a command line:</p>
+  <div class="codeblock"><pre tabindex="0"><code>mkdir -p ~/.cache/huggingface ~/.cache/rawatta
+(umask 077; cat &gt; ~/.cache/huggingface/token)   # paste the token, press Enter, then Ctrl-D</code></pre></div>
+  <p class="small muted">Create both folders yourself, as above: a folder that Docker creates for a mount belongs to root, and then neither the container, which runs as you, nor <code>hf auth login</code> can write to it.</p>
+  <h3>2. Download and convert the weights (once)</h3>
+  <div class="codeblock"><pre tabindex="0"><code># weights, once (host needs only Docker + NVIDIA driver; token file from 'hf auth login' or saved by hand)
+docker run --rm --user "$(id -u):$(id -g)" -v ~/.cache/huggingface:/hf:ro -v ~/.cache/rawatta:/weights \
+  --entrypoint download-weights ghcr.io/sezer-muhammed/rawatta:latest --token-file /hf/token --dir /weights</code></pre></div>
+  <p class="small muted">This downloads the official checkpoint, checks its SHA-256 and converts it to <code>~/.cache/rawatta/vggt_omega_1b_512.safetensors</code>. The token is read from the file and never printed.</p>
+  <h3>3. Reconstruct a folder of photos</h3>
+  <p>Run this in the folder that holds your <code>photos/</code>; the results go to <code>out/</code> next to it.</p>
+  <div class="codeblock"><pre tabindex="0"><code># reconstruct
+docker run --rm --gpus all --user "$(id -u):$(id -g)" -v ~/.cache/rawatta:/weights:ro -v "$PWD":/work \
+  ghcr.io/sezer-muhammed/rawatta:latest run --images photos --config rawatta --out out</code></pre></div>
+  <p>The output folder holds <code>cameras.json</code> (per image: world-to-camera 3×4 in OpenCV convention and 3×3 intrinsics; the world frame is the first image's camera), <code>extrinsics.npy</code>, <code>intrinsics.npy</code>, <code>depth.npy</code>, <code>conf.npy</code>, a coloured point cloud <code>points.ply</code>, a COLMAP text model in <code>colmap/</code> and <code>timing.json</code>. Use <code>--video &lt;file&gt;</code> instead of <code>--images</code> for a video, and <code>--max-frames</code> to cap the number of frames.</p>
+  <div class="table-wrap" role="region" aria-label="Configurations" tabindex="0">
+    <table>
+      <thead><tr><th scope="col">--config</th><th scope="col" class="wrap-cell">What it runs</th><th scope="col" class="wrap-cell gpu-cell">GPU</th></tr></thead>
+      <tbody>
+        <tr><td><code>rawatta</code> (default)</td><td class="wrap-cell">8-bit global attention, 16-bit P·V on blocks 4 and 15</td><td class="wrap-cell gpu-cell">sm_89+</td></tr>
+        <tr><td><code>rawatta-fast</code></td><td class="wrap-cell">8-bit global attention, 16-bit P·V on block 15; frame attention (bf16 kernel) on blocks 0, 4, 5; 4×4 merging (8-bit kernel) on blocks 3, 19</td><td class="wrap-cell gpu-cell">sm_89+</td></tr>
+        <tr><td><code>exact</code></td><td class="wrap-cell">exact engine: bf16 attention everywhere</td><td class="wrap-cell gpu-cell">sm_80+ (not yet run on Ampere)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="scroll-hint" aria-hidden="true">Swipe the table sideways to see all columns.</p>
+  <h3>Without Docker</h3>
+  <p>Build the binary from source (Rust 1.99 or newer). At run time it needs the CUDA 12.x NVRTC and cuBLASLt libraries (12.8 or a newer 12.x: <code>libnvrtc.so.12</code>, <code>libcublasLt.so.12</code>; CUDA 13 libraries are not picked up). If <code>rawatta info</code> says they are not found, add the toolkit's <code>lib64</code> (e.g. <code>/usr/local/cuda-12.8/lib64</code>) to <code>LD_LIBRARY_PATH</code>. <code>tools/download_weights.sh</code> needs curl, python3 3.10 or newer and numpy; it reads the token from <code>~/.cache/huggingface/token</code> and writes the weights to <code>${XDG_CACHE_HOME:-~/.cache}/rawatta/</code>, where <code>rawatta</code> looks by default.</p>
+  <div class="codeblock"><pre tabindex="0"><code>git clone https://github.com/sezer-muhammed/rawatta &amp;&amp; cd rawatta
+cargo build --release -p rawatta-cli
+tools/download_weights.sh
+target/release/rawatta info
+target/release/rawatta run --images photos --config rawatta --out out</code></pre></div>
+  <p class="small muted">No photos at hand? <code>examples/buddha/fetch.sh</code> downloads 34 CC BY 4.0 photos into <code>data/examples/buddha/images</code>.</p>
+  <p class="small muted">Measured speed depends on the GPU: the numbers on this page come from an RTX 4070 SUPER and, where stated, an RTX PRO 6000 Blackwell. See the repository README for the configuration grammar, benchmarking and reproduction scripts.</p>
+</section>
+
+<section id="limitations" aria-labelledby="h-limitations">
+  <h2 id="h-limitations"><a class="anchor" href="#limitations">Limitations</a></h2>
+  <ul class="limits narrow" style="margin-left:0">
+    <li><strong>Calibrated, not universal.</strong> Each model needs its own search. On VGGT-Ω, RAWATTA-Fast loses 2.2 AUC@3 on ETH3D at 50 frames against Official (1.65 against the exact engine; Supp. Tab. 21), and no schedule is best at every length. The regimes carry over to VGGT-1B and π³, but the thresholds of the threshold schedule do not: with VGGT-Ω's thresholds it loses 7.8 (VGGT-1B) and 8.8 (π³) worst-dataset AUC@3.</li>
+    <li><strong>Coverage.</strong> Only ETH3D and NRGBD are unseen in calibration; the other four evaluation datasets share their source datasets, but not sequences, with calibration. Routing restricted to context or anchoring layers is untested.</li>
+    <li><strong>Rivals and hardware.</strong> Published accelerators run as PyTorch ports; on a 96&#8239;GB Blackwell GPU, GPA-VGGT outperforms RAWATTA at 500 frames.</li>
+    <li><strong>Speed, not accuracy.</strong> On 7-Scenes, adding context frames does not improve pose accuracy for any method, so the speed-up is useful for throughput and for sequences the released code cannot fit, not for pose accuracy on this benchmark.</li>
+  </ul>
+  <p class="small muted">Sec. 6 and Sec. 5.6 of the paper; supplementary Sec. F (Tab. 9).</p>
+</section>
+
+<section id="bibtex" aria-labelledby="h-bibtex" class="bib">
+  <h2 id="h-bibtex"><a class="anchor" href="#bibtex">BibTeX</a></h2>
+  <div class="codeblock"><pre tabindex="0"><code id="bibtex-code">@article{sezer2026rawatta,
+  title   = {Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware Attention Approximation},
+  author  = {Sezer, M. Izzet and Dikkaya, Sevval Belkis},
+  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  year    = {2026}
+}</code></pre></div>
+</section>
+
+<section id="acknowledgements" aria-labelledby="h-ack">
+  <h2 id="h-ack"><a class="anchor" href="#acknowledgements">Acknowledgements</a></h2>
+  <p>RAWATTA builds on <a href="https://github.com/facebookresearch/vggt-omega">VGGT-Ω</a> by Meta (FAIR; Wang et al., <a href="https://arxiv.org/abs/2605.15195">CVPR 2026</a>): our engine is a native port of the VGGT-Ω model and runs its released weights. We acknowledge the use of these Research Materials, which Meta makes available under the FAIR Noncommercial Research License, and of DINOv3 materials (the patch embedder, blocks and RoPE of the backbone), which Meta makes available under the DINOv3 License. The quantised attention kernels follow <a href="https://github.com/thu-ml/SageAttention">SageAttention</a>, SageAttention2 and SageAttention2++ (Zhang et al.). We thank the authors of SparseVGGT, GPA-VGGT and FastVGGT for releasing the code we compare against.</p>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p>Page text and figures: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, except <code>docs/static/examples/</code>: the point clouds and cameras there are outputs of the VGGT-Ω weights (FAIR Noncommercial Research License, noncommercial research use only); photos and thumbnails keep their own licences (<code>examples/*/SOURCE.md</code>).</p>
+  <p>The VGGT-Ω port (<code>crates/vggt-omega</code>, also under the DINOv3 License for its backbone), the <code>rawatta</code> binary and image that contain it, and the VGGT-Ω weights: FAIR Noncommercial Research License, for noncommercial research use only. Other code: Apache-2.0.</p>
+  <p>Layout in the spirit of academic project pages such as Nerfies; no template code is used.</p>
+</footer>
+</body>
+</html>

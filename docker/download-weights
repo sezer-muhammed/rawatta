@@ -1,0 +1,60 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+# download-weights: the image's entry point for /opt/rawatta/tools/download_weights.sh (download the
+# gated VGGT-Omega checkpoint from Hugging Face and convert it for rawatta). All arguments are passed
+# through; see `download-weights --help`. Typical use (the host needs only Docker):
+#
+#   mkdir -p ~/.cache/huggingface ~/.cache/rawatta
+#   docker run --rm --user "$(id -u):$(id -g)" -v ~/.cache/huggingface:/hf:ro -v ~/.cache/rawatta:/weights \
+#     --entrypoint download-weights ghcr.io/sezer-muhammed/rawatta:latest --token-file /hf/token --dir /weights
+#
+# Before handing over, this wrapper checks that the output folder is writable by the container user
+# and that a given --token-file is readable, and says what to do on the host when not.
+set -eu
+SCRIPT=/opt/rawatta/tools/download_weights.sh
+
+dir=${RAWATTA_CACHE:-}
+token_file=
+prev=
+for a in "$@"; do
+  case $prev in
+    --dir) dir=$a ;;
+    --token-file) token_file=$a ;;
+  esac
+  case $a in
+    -h|--help) exec "$SCRIPT" --help ;;
+  esac
+  prev=$a
+done
+
+# owner_uid <path>: numeric owner of <path> (empty when it cannot be read).
+owner_uid() { stat -c %u "$1" 2>/dev/null || true; }
+
+if [ -n "$token_file" ] && [ ! -r "$token_file" ]; then
+  hf_dir=$(dirname "$token_file")
+  echo "download-weights: cannot read the token file $token_file inside the container." >&2
+  if [ -d "$hf_dir" ] && [ -z "$(ls -A "$hf_dir" 2>/dev/null)" ] && [ "$(owner_uid "$hf_dir")" = 0 ]; then
+    echo "  The host folder mounted at $hf_dir is empty and owned by root: Docker created it because it" >&2
+    echo "  did not exist (no Hugging Face login yet). Give it back to yourself, then log in:" >&2
+    echo "    sudo chown \"\$(id -u):\$(id -g)\" ~/.cache/huggingface    # or: sudo rmdir ~/.cache/huggingface" >&2
+    echo "    hf auth login    # (pip install -U huggingface_hub; older versions: huggingface-cli login)" >&2
+  else
+    echo "  Check the mount (e.g. -v ~/.cache/huggingface:/hf:ro) and that the file exists on the host" >&2
+    echo "  ('hf auth login' writes ~/.cache/huggingface/token) and is readable by uid $(id -u)." >&2
+  fi
+  exit 1
+fi
+if [ -n "$dir" ]; then
+  if [ -d "$dir" ] && [ ! -w "$dir" ]; then
+    echo "download-weights: the output folder $dir is not writable by uid $(id -u):$(id -g)." >&2
+    if [ "$(owner_uid "$dir")" = 0 ]; then
+      echo "  The host folder mounted there is owned by root: Docker created it because it did not exist." >&2
+      echo "  Give it back to yourself and run the command again (with --user \"\$(id -u):\$(id -g)\"):" >&2
+      echo "    sudo chown \"\$(id -u):\$(id -g)\" ~/.cache/rawatta" >&2
+    else
+      echo "  Run the container with --user \"\$(id -u):\$(id -g)\", and make the host folder writable by that user." >&2
+    fi
+    exit 1
+  fi
+fi
+exec "$SCRIPT" "$@"

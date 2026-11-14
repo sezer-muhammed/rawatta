@@ -1,0 +1,19 @@
+[package]
+name = "rawatta-nn"
+description = "Transformer building blocks on CUDA: cuBLASLt bf16/FP8 GEMMs, fused LayerNorm + FP8 quantisation, QKV prologue with QK-norm and 2D RoPE, FlashAttention-2-style attention, SageAttention2-style INT8/FP8 attention, fused residual."
+license = "Apache-2.0"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+# cuBLASLt is loaded at runtime like the driver and NVRTC, so this crate
+# still compiles and type-checks without CUDA.
+cudarc = { workspace = true, features = ["cublaslt"] }
+serde.workspace = true
+
+[lints]
+workspace = true

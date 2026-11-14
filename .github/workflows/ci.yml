@@ -1,0 +1,96 @@
+# SPDX-License-Identifier: Apache-2.0
+# CPU-only checks. The CUDA libraries (driver, NVRTC, cuBLASLt) are loaded at run time, so the
+# workspace builds and its tests run without a GPU; GPU tests are #[ignore]d and run on a GPU machine
+# (`cargo test --release -- --ignored`).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (fmt, clippy, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@d124f86f28ff42855784ff3319f48ac182c248f8 # 1.99.1
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: Install ffmpeg (video frame sampling test)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: cargo fmt
+        run: cargo fmt --all -- --check
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: cargo test
+        run: cargo test --workspace --locked
+        env:
+          RAWATTA_REQUIRE_FFMPEG: "1"
+
+  python:
+    name: Python (py_compile, pytest, examples)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg (example fixtures)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install test dependencies
+        # Exact versions with hashes (scripts/ci/requirements-ci.txt, from pip-compile --generate-hashes).
+        # CPU torch wheel: the converter's byte-identity test and the official metrics need torch, not CUDA.
+        # Pinned: torch 2.15 saturates float32 -> float8_e4m3fn casts (|x| > 448 gives 448, not NaN),
+        # so tools/tests/test_convert_weights.py::test_casts_match_torch fails with it.
+        run: |
+          python -m pip install --require-hashes --no-deps \
+            --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
+            -r scripts/ci/requirements-ci.txt
+      - name: py_compile, pytest, examples checks
+        run: scripts/ci/python.sh
+        env:
+          PYTHON: python
+
+  lint:
+    name: Lint (ShellCheck, YAML)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install ShellCheck 0.11.0 and PyYAML
+        run: python -m pip install shellcheck-py==0.11.0.1 pyyaml==6.0.3
+      - name: shellcheck
+        run: scripts/ci/shellcheck.sh
+      # actionlint checks the workflows; this parses every YAML file under .github/ (issue forms
+      # included) and CITATION.cff, and checks the issue forms' structure.
+      - name: YAML (issue forms, workflows, CITATION.cff)
+        run: python scripts/ci/check_yaml.py

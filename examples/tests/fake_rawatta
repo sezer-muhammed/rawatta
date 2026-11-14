@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+"""Test stand-in for the `rawatta` binary (no GPU, no weights). Used only by examples/tests/run_tests.sh.
+
+It accepts the same command line as `rawatta info` and `rawatta run` and writes files with the same names and
+layout as a real run, filled with SYNTHETIC data: cameras on a circle, flat depth, a random coloured cloud,
+grey frames in colmap/images/. timing.json carries "synthetic": true and made-up latencies. Never use its
+numbers for anything.
+
+Like rawatta (clap 4), it rejects an option given twice, so the tests catch scripts that duplicate one.
+"""
+
+import argparse
+import json
+import os
+import struct
+import sys
+import zlib
+
+import numpy as np
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "python"))
+from subsample_ply import write_ply  # noqa: E402
+
+FAKE_MS_PER_FRAME = {"exact": 10.0, "rawatta": 7.0, "rawatta-fast": 6.0}
+
+
+def write_png(path, rgb):
+    """Minimal 8-bit RGB PNG writer (stdlib only)."""
+    h, w, _ = rgb.shape
+    raw = b"".join(b"\x00" + rgb[y].tobytes() for y in range(h))
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    with open(path, "wb") as f:
+        f.write(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+                + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+
+
+def colmap_image_names(names):
+    """Same rule as rawatta: input stem + .png (whitespace -> _), frame number prefixed on collisions."""
+    base = ["".join("_" if c.isspace() else c for c in os.path.splitext(n)[0]) + ".png" for n in names]
+    if len(set(base)) == len(base):
+        return base
+    return ["%05d_%s" % (i, b) for i, b in enumerate(base)]
+
+
+def reject_repeated_options(argv):
+    seen = set()
+    for tok in argv:
+        if tok == "--" or not tok.startswith("--"):
+            continue
+        name = tok.split("=", 1)[0]
+        if name in seen:
+            sys.stderr.write("error: the argument '%s' cannot be used multiple times\n" % name)
+            sys.exit(2)
+        seen.add(name)
+
+
+def look_at_w2c(centre, target):
+    z = target - centre
+    z /= np.linalg.norm(z)
+    x = np.cross(np.array([0.0, 1.0, 0.0]), z)  # OpenCV: camera y points down
+    x /= np.linalg.norm(x)
+    y = np.cross(z, x)
+    r = np.stack([x, y, z])
+    return np.concatenate([r, -(r @ centre)[:, None]], axis=1)
+
+
+def run(a):
+    if a.images:
+        exts = (".jpg", ".jpeg", ".png", ".webp")
+        names = sorted(f for f in os.listdir(a.images) if f.lower().endswith(exts))
+        if a.max_frames:
+            names = names[: a.max_frames]
+    else:
+        names = ["frame_%06d.png" % i for i in range(a.max_frames or 64)]
+    if not names:
+        sys.exit("fake_rawatta: no images")
+    n, h, w = len(names), 36, 64
+    ang = np.linspace(0, np.pi / 2, n)
+    centres = np.stack([2 * np.sin(ang), np.zeros(n), 2 - 2 * np.cos(ang)], axis=1)
+    target = np.array([0.0, 0.0, 2.0])
+    w2c = np.stack([look_at_w2c(c, target) for c in centres])
+    k = np.array([[50.0, 0, w / 2], [0, 50.0, h / 2], [0, 0, 1]])
+    os.makedirs(a.out, exist_ok=True)
+    p = lambda f: os.path.join(a.out, f)  # noqa: E731
+    with open(p("cameras.json"), "w") as f:
+        json.dump({"convention": "synthetic", "width": w, "height": h,
+                   "frames": [{"image": nm, "w2c": m.tolist(), "intrinsics": k.tolist()} for nm, m in zip(names, w2c)]},
+                  f, indent=1)
+    np.save(p("extrinsics.npy"), w2c.astype(np.float32))
+    np.save(p("intrinsics.npy"), np.repeat(k[None], n, 0).astype(np.float32))
+    if not a.no_depth:
+        np.save(p("depth.npy"), np.full((n, h, w), 2.0, np.float32))
+        np.save(p("conf.npy"), np.ones((n, h, w), np.float32))
+    rng = np.random.default_rng(0)
+    m = 400_000
+    pts = rng.normal(size=(m, 3)) * [0.5, 0.3, 0.3] + target
+    write_ply(p("points.ply"), pts, rng.integers(0, 256, size=(m, 3), dtype=np.uint8), comments=("SYNTHETIC",))
+    os.makedirs(p("colmap/images"), exist_ok=True)
+    cnames = colmap_image_names(names)
+    grey = np.full((h, w, 3), 128, np.uint8)
+    for nm in cnames:
+        write_png(p("colmap/images/" + nm), grey)
+    with open(p("colmap/cameras.txt"), "w") as f:
+        f.write("# synthetic\n")
+        for i in range(n):
+            f.write("%d PINHOLE %d %d 50 50 %g %g\n" % (i + 1, w, h, w / 2, h / 2))
+    with open(p("colmap/images.txt"), "w") as f:
+        for i, nm in enumerate(cnames):
+            f.write("%d 1 0 0 0 0 0 0 %d %s\n\n" % (i + 1, i + 1, nm))
+    with open(p("colmap/points3D.txt"), "w") as f:
+        f.write("1 0 0 2 255 0 0 0\n")
+    # Same keys as rawatta's timing.json. Times are symmetric around base * n, so the median is exactly that.
+    base = FAKE_MS_PER_FRAME.get(a.config, 8.0) * n
+    times = [base + d for d in np.linspace(-1.0, 1.0, a.reps)] if a.reps > 1 else [base]
+    q = np.percentile(times, [25, 50, 75])
+    with open(p("timing.json"), "w") as f:
+        json.dump({"synthetic": True, "config": a.config, "frames": n, "width": w, "height": h,
+                   "warmup": a.warmup, "reps": a.reps, "times_ms": [float(t) for t in times],
+                   "median_ms": float(q[1]), "iqr_ms": float(q[2] - q[0]),
+                   "peak_device_mib": 100.0 * n, "card_used_peak_mib": 100.0 * n + 2000.0,
+                   "gpu": "none (fake_rawatta test stub)"}, f, indent=1)
+    print("fake_rawatta: wrote synthetic outputs for %d frames to %s" % (n, a.out))
+
+
+def main():
+    ap = argparse.ArgumentParser(prog="fake_rawatta")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("info")
+    r = sub.add_parser("run")
+    g = r.add_mutually_exclusive_group(required=True)
+    g.add_argument("--images")
+    g.add_argument("--video")
+    r.add_argument("--out", required=True)
+    r.add_argument("--config", default="rawatta")
+    r.add_argument("--max-frames", type=int, default=None)
+    r.add_argument("--weights")
+    r.add_argument("--crop-aspect")
+    r.add_argument("--no-depth", action="store_true")
+    r.add_argument("--max-points", type=int, default=2_000_000)
+    r.add_argument("--conf-percentile", type=float, default=50.0)
+    r.add_argument("--reps", type=int, default=1)  # rawatta's defaults: 1 timed pass after 1 warm-up
+    r.add_argument("--warmup", type=int, default=1)
+    reject_repeated_options(sys.argv[1:])
+    a = ap.parse_args()
+    if a.cmd == "run" and a.reps < 1:
+        sys.exit("fake_rawatta: --reps must be at least 1")
+    if a.cmd == "info":
+        print("fake_rawatta: no GPU (test stub)")
+        return 0
+    if a.video and not os.path.isfile(a.video):
+        sys.exit("fake_rawatta: no such video")
+    return run(a)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

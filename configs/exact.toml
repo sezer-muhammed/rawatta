@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+# The exact engine: `rawatta run --config exact`. The grammar string below is
+# what the name stands for (see GRAMMAR.md).
+
+name = "exact"
+display_name = "Exact engine"
+grammar = "dense@bf16"
+description = """
+The native CUDA engine with exact attention: every global layer dense, bf16 \
+FlashAttention-style kernels, bf16 linear layers through cuBLASLt. No attention \
+approximation (exact bf16 attention, bf16 weights). It is not bit-identical to \
+the official PyTorch code, which keeps fp32 weights under bf16 autocast: the \
+paper measures -0.86 worst-dataset AUC@3 against Official VGGT-Omega (Tab. 4). \
+It is the baseline that isolates the method: RAWATTA and \
+RAWATTA-Fast against the exact engine measure the method alone, and the exact \
+engine against the official PyTorch VGGT-Omega code measures the engine \
+alone. It needs no FP8 tensor cores: built and bit-checked for sm_80+, not \
+yet run on Ampere hardware."""
+min_compute_capability = "8.0"
+paper_reference = "Sec. 4.5 (Native engine); supplementary material, section Configuration names (table: paper name to engine configuration)."

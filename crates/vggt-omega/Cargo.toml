@@ -1,0 +1,33 @@
+[package]
+name = "vggt-omega"
+description = "Native CUDA inference engine for Meta's VGGT-Omega architecture: memory planner, preprocessing, trunk, camera and dense heads, attention-schedule config grammar, benchmark cell."
+license-file = "../../LICENSE-VGGT-OMEGA"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[features]
+default = ["libjpeg"]
+# Decode JPEGs with libjpeg (mozjpeg, integer slow DCT, fancy upsampling),
+# bit-exact with PIL as the official preprocessing uses it. Without it, the
+# `image` crate's decoder is used (pixels may differ by a few levels).
+libjpeg = ["dep:mozjpeg"]
+
+[dependencies]
+anyhow.workspace = true
+image.workspace = true
+memmap2.workspace = true
+mozjpeg = { workspace = true, optional = true }
+rawatta-nn.workspace = true
+rayon.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+zip.workspace = true
+
+[lints]
+workspace = true

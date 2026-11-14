@@ -1,0 +1,5 @@
+# Example scenes of the project-page gallery, in the order the page shows them (the first one opens first).
+# make_gallery.sh builds these when called without scene names, and index.json keeps this order however
+# often a single scene is rebuilt. Each name is a folder examples/<name>/ with a scene.json.
+buddha
+korno-rock

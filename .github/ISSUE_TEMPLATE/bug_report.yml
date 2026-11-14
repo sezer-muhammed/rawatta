@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in rawatta fails, crashes or gives wrong results.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please do not attach model weights or the converted `.safetensors` files
+        (they are under the FAIR Noncommercial Research License and must not be redistributed).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: The exact command line (rawatta run / bench / info, or the docker run line), including --config.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: info
+    attributes:
+      label: Output of `rawatta info`
+      description: |
+        Run `rawatta info` (or `docker run --rm --gpus all ghcr.io/sezer-muhammed/rawatta info`) on the
+        machine where the problem happens and paste the whole output. It shows the GPU, compute capability,
+        driver CUDA version, NVRTC and cuBLASLt status and whether the weights are found.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Error output or log
+      description: >-
+        The full error message (`rawatta: error: ...`) and anything printed before it.
+        Set RUST_BACKTRACE=1 for a panic.
+      render: text
+  - type: dropdown
+    id: install
+    attributes:
+      label: How you run rawatta
+      options:
+        - Docker image (ghcr.io/sezer-muhammed/rawatta)
+        - Binary built from source (cargo build --release)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: rawatta version or commit
+      description: "`rawatta --version`, the image tag, or the git commit you built."
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: OS and driver
+      description: "For example Ubuntu 24.04, NVIDIA driver 570.x (from `nvidia-smi`)."
+  - type: textarea
+    id: input
+    attributes:
+      label: Input
+      description: Number of images or the video length, image resolution, and a link to the data if it is public.

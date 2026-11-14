@@ -1,0 +1,29 @@
+{
+  "scenes": [
+    {
+      "id": "buddha",
+      "title": "Buddha head",
+      "dir": "buddha",
+      "points": "points.ply",
+      "cameras": "cameras.json",
+      "thumb": "thumb.jpg",
+      "caption": "4 photos, --config rawatta. Forward pass 28.0 ms on none (fake_rawatta test stub) (median of 3 timed runs). SYNTHETIC test data, not a measurement. Photos: Buddha Dataset by Simone Gasparini, Fabien Castan and Yann Lanthony (AliceVision), doi:10.5281/zenodo.1203283, CC BY 4.0. 34 of 67 photos, downscaled; point cloud and cameras computed with RAWATTA.",
+      "frames": 4,
+      "config": "rawatta",
+      "latency_ms": 28.0,
+      "latency_iqr_ms": 1.0,
+      "reps": 3,
+      "warmup": 1,
+      "gpu": "none (fake_rawatta test stub)",
+      "point_count": 2000,
+      "licence": "CC BY 4.0",
+      "licence_url": "https://creativecommons.org/licenses/by/4.0/",
+      "source": "https://github.com/alicevision/dataset_buddha",
+      "author": "Simone Gasparini, Fabien Castan, Yann Lanthony (AliceVision)",
+      "attribution": "Photos: Buddha Dataset by Simone Gasparini, Fabien Castan and Yann Lanthony (AliceVision), doi:10.5281/zenodo.1203283, CC BY 4.0. 34 of 67 photos, downscaled; point cloud and cameras computed with RAWATTA.",
+      "changes": "34 of the 67 photos (every second one), 00033 moved first, downscaled to 1024 px long side and saved as JPEG.",
+      "kind": "object",
+      "synthetic": true
+    }
+  ]
+}

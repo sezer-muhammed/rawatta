@@ -1,0 +1,233 @@
+{
+ "held": {
+  "0:frame": {
+   "mean3": -0.1757
+  },
+  "0:merge2": {
+   "mean3": -0.1108
+  },
+  "0:merge4": {
+   "mean3": -0.315
+  },
+  "0:merge8": {
+   "mean3": -0.0823
+  },
+  "10:frame": {
+   "mean3": -10.4432
+  },
+  "10:merge2": {
+   "mean3": -0.3941
+  },
+  "10:merge4": {
+   "mean3": -1.8455
+  },
+  "10:merge8": {
+   "mean3": -2.5261
+  },
+  "11:frame": {
+   "mean3": -12.2982
+  },
+  "11:merge2": {
+   "mean3": -2.0291
+  },
+  "11:merge4": {
+   "mean3": -4.905
+  },
+  "11:merge8": {
+   "mean3": -5.8325
+  },
+  "12:frame": {
+   "mean3": -27.7493
+  },
+  "12:merge2": {
+   "mean3": -1.0431
+  },
+  "12:merge4": {
+   "mean3": -1.8044
+  },
+  "12:merge8": {
+   "mean3": -3.0896
+  },
+  "13:frame": {
+   "mean3": -31.4514
+  },
+  "13:merge2": {
+   "mean3": -1.7949
+  },
+  "13:merge4": {
+   "mean3": -4.5774
+  },
+  "13:merge8": {
+   "mean3": -7.6306
+  },
+  "15:frame": {
+   "mean3": -34.8908
+  },
+  "15:merge2": {
+   "mean3": -4.4239
+  },
+  "15:merge4": {
+   "mean3": -8.5027
+  },
+  "15:merge8": {
+   "mean3": -12.5435
+  },
+  "16:frame": {
+   "mean3": -35.592
+  },
+  "16:merge2": {
+   "mean3": -1.9516
+  },
+  "16:merge4": {
+   "mean3": -3.4362
+  },
+  "16:merge8": {
+   "mean3": -4.7895
+  },
+  "17:frame": {
+   "mean3": -26.8234
+  },
+  "17:merge2": {
+   "mean3": -0.7882
+  },
+  "17:merge4": {
+   "mean3": -1.7838
+  },
+  "17:merge8": {
+   "mean3": -2.0576
+  },
+  "18:frame": {
+   "mean3": -21.157
+  },
+  "18:merge2": {
+   "mean3": -0.6157
+  },
+  "18:merge4": {
+   "mean3": -0.7582
+  },
+  "18:merge8": {
+   "mean3": -0.6806
+  },
+  "19:frame": {
+   "mean3": -35.239
+  },
+  "19:merge2": {
+   "mean3": -0.1678
+  },
+  "19:merge4": {
+   "mean3": -0.2168
+  },
+  "19:merge8": {
+   "mean3": -0.0776
+  },
+  "1:frame": {
+   "mean3": 0.0617
+  },
+  "1:merge2": {
+   "mean3": -0.3751
+  },
+  "1:merge4": {
+   "mean3": -0.3229
+  },
+  "1:merge8": {
+   "mean3": -0.2327
+  },
+  "21:frame": {
+   "mean3": -35.7851
+  },
+  "21:merge2": {
+   "mean3": -1.969
+  },
+  "21:merge4": {
+   "mean3": -2.4691
+  },
+  "21:merge8": {
+   "mean3": -2.6306
+  },
+  "22:frame": {
+   "mean3": -4.3083
+  },
+  "22:merge2": {
+   "mean3": 0.0855
+  },
+  "22:merge4": {
+   "mean3": 0.057
+  },
+  "22:merge8": {
+   "mean3": -0.0902
+  },
+  "23:frame": {
+   "mean3": -29.8338
+  },
+  "23:merge2": {
+   "mean3": -0.019
+  },
+  "23:merge4": {
+   "mean3": 0.1235
+  },
+  "23:merge8": {
+   "mean3": 0.0253
+  },
+  "3:frame": {
+   "mean3": -0.717
+  },
+  "3:merge2": {
+   "mean3": -0.0665
+  },
+  "3:merge4": {
+   "mean3": -0.0348
+  },
+  "3:merge8": {
+   "mean3": -0.2422
+  },
+  "4:frame": {
+   "mean3": -0.1219
+  },
+  "4:merge2": {
+   "mean3": 0.0443
+  },
+  "4:merge4": {
+   "mean3": -0.2121
+  },
+  "4:merge8": {
+   "mean3": -0.3545
+  },
+  "5:frame": {
+   "mean3": -0.7692
+  },
+  "5:merge2": {
+   "mean3": -0.2137
+  },
+  "5:merge4": {
+   "mean3": -0.2501
+  },
+  "5:merge8": {
+   "mean3": -0.1029
+  },
+  "7:frame": {
+   "mean3": 0.0253
+  },
+  "7:merge2": {
+   "mean3": -0.2437
+  },
+  "7:merge4": {
+   "mean3": -0.5033
+  },
+  "7:merge8": {
+   "mean3": -0.4622
+  },
+  "8:frame": {
+   "mean3": -0.4084
+  },
+  "8:merge2": {
+   "mean3": -0.1678
+  },
+  "8:merge4": {
+   "mean3": -0.2248
+  },
+  "8:merge8": {
+   "mean3": 0.0079
+  }
+ },
+ "note": "Single-layer mean delta AUC@3 (one global block approximated alone) on the held-out datasets ETH3D and 7-Scenes. Rounded from the paper's sources to 1e-4."
+}

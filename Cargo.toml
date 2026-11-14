@@ -1,0 +1,39 @@
+[workspace]
+resolver = "3"
+members = ["crates/rawatta-nn", "crates/vggt-omega", "crates/rawatta-cli"]
+default-members = ["crates/rawatta-nn", "crates/vggt-omega", "crates/rawatta-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+repository = "https://github.com/sezer-muhammed/rawatta"
+publish = false
+
+[workspace.dependencies]
+rawatta-nn = { path = "crates/rawatta-nn" }
+vggt-omega = { path = "crates/vggt-omega" }
+
+anyhow = "1"
+clap = { version = "4.5", features = ["derive"] }
+# CUDA libraries (driver, NVRTC, cuBLASLt) are loaded at runtime, so every
+# crate compiles and type-checks on machines without CUDA. cuda-12080 is the
+# API floor: binaries run on any driver that supports CUDA 12.8 or newer.
+cudarc = { version = "0.19", default-features = false, features = ["std", "driver", "nvrtc", "fallback-dynamic-loading", "cuda-12080"] }
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+memmap2 = "0.9"
+mozjpeg = { version = "0.10", default-features = false, features = ["parallel"] }
+rayon = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+tracing = "0.1"
+zip = { version = "9", default-features = false, features = ["deflate-flate2"] }
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+
