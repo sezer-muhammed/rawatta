@@ -6,9 +6,8 @@
 #   RAWATTA_RUNNER   auto (default) | binary | docker
 #                    auto uses the binary if RAWATTA_BIN is found, otherwise Docker.
 #   RAWATTA_BIN      binary name or path (default: rawatta; e.g. target/release/rawatta after a native build)
-#   RAWATTA_IMAGE    Docker image (default: ghcr.io/sezer-muhammed/rawatta:latest, published at v0.1.0;
-#                    until then build it with `docker build -f docker/Dockerfile -t rawatta .` and set
-#                    RAWATTA_IMAGE=rawatta)
+#   RAWATTA_IMAGE    Docker image (default: ghcr.io/sezer-muhammed/rawatta:latest; for a local build,
+#                    `docker build -f docker/Dockerfile -t rawatta .`, set RAWATTA_IMAGE=rawatta)
 #   RAWATTA_GPUS     value for `docker run --gpus` (default: all)
 #   RAWATTA_WEIGHTS  weights file. Default: ${XDG_CACHE_HOME:-$HOME/.cache}/rawatta/vggt_omega_1b_512.safetensors
 #                    The binary reads this variable itself. In Docker mode the file's folder is mounted read-only

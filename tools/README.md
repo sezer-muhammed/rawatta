@@ -15,9 +15,8 @@ approved), then save a Read token (`hf auth login` writes `~/.cache/huggingface/
 token in that file by hand).
 
 With Docker (the host needs only Docker and the NVIDIA driver), once. The image
-`ghcr.io/sezer-muhammed/rawatta` is published at v0.1.0, and pulling it before then fails with
-"error from registry: denied": until then build it with `docker build -f docker/Dockerfile -t rawatta .`
-and use `rawatta` as the image name. Create both host folders first, so that they belong to you and
+is `ghcr.io/sezer-muhammed/rawatta:latest` (or build it with
+`docker build -f docker/Dockerfile -t ghcr.io/sezer-muhammed/rawatta:latest .`). Create both host folders first, so that they belong to you and
 not to root:
 
 ```sh

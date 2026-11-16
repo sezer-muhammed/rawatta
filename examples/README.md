@@ -28,9 +28,8 @@ RAWATTA-Fast and the exact engine), read the outputs from Python, and build the 
   build of the `rawatta` binary.
 - The VGGT-Ω weights, converted for rawatta (research use only, FAIR Noncommercial Research License). Download
   them once; the token file comes from `hf auth login` (or save your Hugging Face token in it by hand). The image
-  `ghcr.io/sezer-muhammed/rawatta` is published at v0.1.0, and pulling it before then fails with "error from
-  registry: denied": until then build it from the repository root with `docker build -f docker/Dockerfile -t rawatta .`
-  and use `rawatta` as the image name (or tag the build `-t ghcr.io/sezer-muhammed/rawatta:latest`). Create both host
+  is `ghcr.io/sezer-muhammed/rawatta:latest` (or build it from the repository root with
+  `docker build -f docker/Dockerfile -t ghcr.io/sezer-muhammed/rawatta:latest .`). Create both host
   folders first, so that they belong to you and not to root:
 
   ```bash

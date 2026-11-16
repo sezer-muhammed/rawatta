@@ -138,12 +138,10 @@ mkdir -p ~/.cache/huggingface ~/.cache/rawatta    # create both yourself, so tha
 (umask 077; cat > ~/.cache/huggingface/token)      # paste the token, press Enter, then Ctrl-D
 ```
 
-**2. Download the weights and reconstruct (Docker).** The host needs only Docker and the NVIDIA driver. The image
-`ghcr.io/sezer-muhammed/rawatta` is published at v0.1.0; pulling it before then fails with `error from registry:
-denied`. Until then, build it in a clone (`git clone https://github.com/sezer-muhammed/rawatta && cd rawatta`) with
-`docker build -f docker/Dockerfile -t rawatta .` and use `rawatta` in place of
-`ghcr.io/sezer-muhammed/rawatta:latest`, or build with `-t ghcr.io/sezer-muhammed/rawatta:latest` to run the commands
-below unchanged.
+**2. Download the weights and reconstruct (Docker).** The host needs only Docker and the NVIDIA driver. The commands
+below pull the published image `ghcr.io/sezer-muhammed/rawatta:latest`. To build it yourself instead, run
+`docker build -f docker/Dockerfile -t ghcr.io/sezer-muhammed/rawatta:latest .` in a clone
+(`git clone https://github.com/sezer-muhammed/rawatta && cd rawatta`) and the commands work unchanged.
 
 ```sh
 mkdir -p ~/.cache/huggingface ~/.cache/rawatta    # if not done in step 1: Docker would create them owned by root

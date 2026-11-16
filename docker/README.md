@@ -4,11 +4,10 @@
 The host needs only Docker and an NVIDIA driver. The model weights are **not** in the image: one
 command downloads and converts them into a folder on the host, which you then mount.
 
-The image is published at v0.1.0; pulling it before then fails with "error from registry: denied".
-Until then build it from a checkout (`git clone https://github.com/sezer-muhammed/rawatta && cd rawatta`)
-with `docker build -f docker/Dockerfile -t rawatta .` (needs BuildKit, see [Build details](#build-details))
-and use `rawatta` in place of `ghcr.io/sezer-muhammed/rawatta:latest` in the commands below, or build
-with `-t ghcr.io/sezer-muhammed/rawatta:latest` to use them unchanged.
+The image is published as `ghcr.io/sezer-muhammed/rawatta` (`:latest` and one tag per release).
+To build it yourself, run `docker build -f docker/Dockerfile -t ghcr.io/sezer-muhammed/rawatta:latest .`
+in a checkout (`git clone https://github.com/sezer-muhammed/rawatta && cd rawatta`; needs BuildKit, see
+[Build details](#build-details)) and the commands below work unchanged.
 
 ## Quick start
 
