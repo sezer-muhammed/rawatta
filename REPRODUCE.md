@@ -3,7 +3,7 @@
 The commands behind each table of *Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware
 Attention Approximation*, the values the paper reports, and what this repository cannot reproduce.
 
-Every expected value below is from the paper (arXiv XXXX.XXXXX, version 1) and names its table ("Tab." = main paper,
+Every expected value below is from the paper (arXiv 2611.17629, version 1) and names its table ("Tab." = main paper,
 "Supp. Tab." = supplementary material). The paper's runs used the authors' research codebase, from which this release
 was extracted; the kernel sources are unchanged apart from renames ([crates/ARCHITECTURE.md](crates/ARCHITECTURE.md)).
 The dataset runs behind the paper's tables have not been repeated with this release's binary yet.

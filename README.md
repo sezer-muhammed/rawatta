@@ -4,11 +4,11 @@
 
 [![CI](https://github.com/sezer-muhammed/rawatta/actions/workflows/ci.yml/badge.svg)](https://github.com/sezer-muhammed/rawatta/actions/workflows/ci.yml)
 [![Licence: Apache-2.0 and FAIR Noncommercial](https://img.shields.io/badge/licence-Apache--2.0%20%2B%20FAIR%20NC-blue)](#licences)
-![arXiv: coming soon](https://img.shields.io/badge/arXiv-coming%20soon-lightgrey)
+[![arXiv](https://img.shields.io/badge/arXiv-2611.17629-b31b1b)](https://arxiv.org/abs/2611.17629)
 [![Project page](https://img.shields.io/badge/project-page-informational)](https://sezer-muhammed.github.io/rawatta/)
 
 Code for the paper *Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware Attention
-Approximation* by M. Izzet Sezer and Sevval Belkis Dikkaya (arXiv: coming soon). Project page (live at launch):
+Approximation* by M. Izzet Sezer and Sevval Belkis Dikkaya ([arXiv:2611.17629](https://arxiv.org/abs/2611.17629)). Project page:
 <https://sezer-muhammed.github.io/rawatta/>.
 
 <p align="center">
@@ -312,7 +312,7 @@ Of this release:
 @article{sezer2026rawatta,
   title   = {Training-Free Acceleration of Multi-View 3D Transformers via Regime-Aware Attention Approximation},
   author  = {Sezer, M. Izzet and Dikkaya, Sevval Belkis},
-  journal = {arXiv preprint arXiv:XXXX.XXXXX},
+  journal = {arXiv preprint arXiv:2611.17629},
   year    = {2026}
 }
 ```

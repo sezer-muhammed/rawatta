@@ -98,10 +98,8 @@ const SYNTH_LICENCE = "https://creativecommons.org/licenses/by/4.0/";
           links: [...document.querySelectorAll("[data-arxiv]")].map((x) => ({ href: x.getAttribute("href"), disabled: x.getAttribute("aria-disabled") })),
           bibId: (document.getElementById("bibtex-code").textContent.match(/arXiv:(\S+)\}/) || [])[1],
         }));
-        // only the dev copy flips ARXIV_ID to a fake id (check.sh); the shipped page keeps the placeholder
-        const arxivOk = t.name === "dev"
-          ? r.arxiv.links.every((l) => l.href && l.href.includes("2611.00001") && !l.disabled) && r.arxiv.bibId === "2611.00001"
-          : r.arxiv.links.every((l) => !l.href && l.disabled === "true") && r.arxiv.bibId === "XXXX.XXXXX";
+        // the arXiv ID is set (2611.17629), so the shipped page and the dev copy both link the paper
+        const arxivOk = r.arxiv.links.every((l) => l.href && l.href.includes("2611.17629") && !l.disabled) && r.arxiv.bibId === "2611.17629";
         r.codeText = await page.evaluate(() => [...document.querySelectorAll("#use pre code")].map((c) => c.textContent).join("\n\n"));
         r.missingCommands = CANONICAL.filter((c) => !r.codeText.includes(c));
         r.oursLabel = await page.evaluate(() => /\bOurs\b/.test(document.body.innerText));

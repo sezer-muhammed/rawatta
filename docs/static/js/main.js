@@ -5,7 +5,7 @@ import { parseSceneIndex } from "./formats.js";
 // ---------------------------------------------------------------------------------------------
 // Set this to the arXiv identifier (for example "2611.01234") once the paper is announced.
 // While it is empty, the Paper and PDF buttons stay disabled and read "coming soon".
-const ARXIV_ID = "";
+const ARXIV_ID = "2611.17629";
 // ---------------------------------------------------------------------------------------------
 
 const EXAMPLES_INDEX = "static/examples/index.json";

@@ -1,5 +1,3 @@
-# The arXiv identifier is not known yet: XXXX.XXXXX is replaced at launch (scripts/LAUNCH.md, step 2),
-# which also adds the arXiv DOI under `identifiers`.
 cff-version: 1.2.0
 message: "If you use this software, please cite the paper below."
 type: software
@@ -20,6 +18,13 @@ authors:
     affiliation: Carnegie Mellon University
 repository-code: "https://github.com/sezer-muhammed/rawatta"
 url: "https://sezer-muhammed.github.io/rawatta/"
+identifiers:
+  - type: doi
+    value: "10.48550/arXiv.2611.17629"
+    description: "arXiv DOI of the paper"
+  - type: url
+    value: "https://arxiv.org/abs/2611.17629"
+    description: "The paper on arXiv"
 version: 0.1.0
 keywords:
   - multi-view 3D reconstruction
@@ -38,6 +43,8 @@ preferred-citation:
     - family-names: Dikkaya
       given-names: Sevval Belkis
       affiliation: Carnegie Mellon University
-  journal: "arXiv preprint arXiv:XXXX.XXXXX"
+  journal: "arXiv preprint arXiv:2611.17629"
   status: preprint
+  doi: "10.48550/arXiv.2611.17629"
+  url: "https://arxiv.org/abs/2611.17629"
   year: 2026
